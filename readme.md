@@ -1,35 +1,49 @@
-# Name der App
+# 🎬 MovieLog
 
-**Füge hier einen kurzen, knackigen Slogan ein, um deine App zu bewerben.**
+**Track, rate, and remember the movies you love.**
 
-Beschreibe hier in ein paar Sätzen, was deine App bietet.
+## 🖥️ Overview
+<p>MovieLog is your personal movie diary. Search for movies, save your favorites, rate them, and write short personal reviews — all in one simple and stylish app.</p>
 
-Für wen ist sie geeignet? Welches Problem löst sie? Was macht deine App anders/besser als andere Apps?
-Vermeide es, hier allzusehr in technische Details zu gehen.
+## 📋 Contents
+- [Overview](#-overview)
+- [Screenshots](#-screenshots)
+- [Installation](#-installation)
+- [Features](#-features)
+- [Technical Stack](#-technical-stack)
+- [Libraries](#-libraries)
+- [Contact/Authors](#-contactauthors)
+
+## 📸 Screenshots 
+*Under Construction*
+
+## ✨ Features
+
+<ol>
+<li>🔍 Search movies using a public movie database</li>
+<li>💬 Write short personal reviews</li>
+<li>💾 Save favorite movies</li>
+<li>⭐️ Rate saved movies (1–5 stars)</li>
+</ol>
+
+## 📲 Installation
+1. Clone repo:
+   ```bash
+   git clone https://github.com/yourusername/movielog.git
+
+2. Navigate to the project folder:
+   ```bash
+   cd movielog
+3. Open the project in Android Studio and run it on a simulator or a real device.
 
 
-## Design
-Füge hier am Ende die Screenshots deiner App ein.
+## 🚀 Technical Stack
 
-<p>
-  <img src="./img/screen1.png" width="200">
-  <img src="./img/screen2.png" width="200">
-  <img src="./img/screen3.png" width="200">
-</p>
-
-
-## Features
-Hier kommen alle Features rein, welche deine App bietet.
-
-**Tipp: Du kannst diese Punkte mit der Zeit abhaken, sodass am Ende eine vollständige Liste entsteht.**
-
-- [x] Feature 1
-- [x] Feature 2
-- [ ] ...
-
-
-## Technischer Aufbau
-
+### Core Components
+- **[Jetpack Compose](https://developer.android.com/compose)** - UI Framework
+- **[Room](https://developer.android.com/training/data-storage/room)** - Local database
+- **[Retrofit](https://developer.android.com/training/data-storage/room)** - API networking
+ 
 #### Projektaufbau
 Eine kurze Beschreibung deiner Ordnerstruktur und Architektur (MVVM, Repositories) um Außenstehenden zu helfen, sich in deinem Projekt zurecht zu finden.
 
