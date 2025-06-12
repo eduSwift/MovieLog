@@ -3,7 +3,7 @@
 **Track, rate, and remember the movies you love.**
 
 ## 🖥️ Overview
-<p>MovieLog is your personal movie diary. Search for movies, save your favorites, rate them, and write short personal reviews — all in one simple and stylish app.</p>
+<p>MovieLog is a personal movie diary for film enthusiasts, who want to keep track of the movies they’ve watched and remember how they felt about them. Search for movies, save your favorites, rate them, and write short personal reviews — all in one simple and stylish app.</p>
 
 ## 📋 Contents
 - [Overview](#-overview)
@@ -39,27 +39,27 @@
 
 ## 🚀 Technical Stack
 
-### Core Components
+### 📁 Project Structure
+MovieLog uses the MVVM (Model-View-ViewModel) architecture and is structured into clear packages for separation of concerns
+
+### 🏗️ Core Components
 - **[Jetpack Compose](https://developer.android.com/compose)** - UI Framework
 - **[Room](https://developer.android.com/training/data-storage/room)** - Local database
 - **[Retrofit](https://developer.android.com/training/data-storage/room)** - API networking
+- **[Moshi](https://developer.android.com/training/data-storage/room)** - JSON parsing
  
-#### Projektaufbau
-Eine kurze Beschreibung deiner Ordnerstruktur und Architektur (MVVM, Repositories) um Außenstehenden zu helfen, sich in deinem Projekt zurecht zu finden.
+## 📚 Libraries
+[TMDb (The Movie Database)](https://developer.themoviedb.org/docs/getting-started)** - API for movie search and details
 
-#### Datenspeicherung
-Welche Daten speicherst du? Wo und wie (Firebase, Core Data)? Erkläre hier auch, warum du den jeweiligen Dienst nutzt (offline-first, Sync usw.).
+## 🔭 Outlook
+Here’s what’s planned for future development of MovieLog:
 
-#### API Calls
-Welche APIs verwendest du?
+<ol>
+<li> Add a Watchlist (to log movies you want to see)</li>
+<li> Add Dark Mode support</li>
+<li> Filter and sort favorites (by year, rating, title)</li>
 
-#### 3rd-Party Frameworks
-Verwendest du Frameworks/Libraries, die nicht von dir stammen?
+## 👨🏻‍💻 Contact/Authors
+[Eduardo Rodrigues](https://www.linkedin.com/in/eduardo-rodriguescruz/)
 
 
-## Ausblick
-Beschreibe hier, wo die Reise nach deinem Praxisprojekt hin geht. Was möchtest du in Zukunft noch ergänzen?
-
-- [ ] Geplantes Feature 1
-- [ ] Geplantes Feature 2
-- [ ] ...
