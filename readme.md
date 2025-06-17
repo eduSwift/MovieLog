@@ -2,6 +2,10 @@
 
 **Track, rate, and remember the movies you love.**
 
+<img src="https://github.com/SI-Classroom-Batch-022/androidabschlussprojekt-eduSwift/blob/main/MovieLog.png" width="500" align="left">
+
+<br clear="all">
+
 ## 🖥️ Overview
 <p>MovieLog is a personal movie diary for film enthusiasts, who want to keep track of the movies they’ve watched and remember how they felt about them. Search for movies, save your favorites, rate them, and write short personal reviews — all in one simple and stylish app.</p>
 
