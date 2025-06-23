@@ -1,3 +1,15 @@
+
+import java.io.FileInputStream
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+val apiKey = localProperties.getProperty("API_KEY") ?: ""
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +17,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 
 }
+
 
 android {
     namespace = "de.syntax_institut.androidabschlussprojekt"
@@ -18,10 +31,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
     }
 
     buildTypes {
+
+        debug {
+            buildConfigField("String", "MOVIE_API_KEY", "\"$apiKey\"")
+        }
         release {
+            buildConfigField("String", "MOVIE_API_KEY", "\"$apiKey\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -37,6 +57,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }

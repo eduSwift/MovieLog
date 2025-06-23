@@ -34,7 +34,6 @@ fun MovieItem(movie: Movie) {
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(text = movie.title, style = MaterialTheme.typography.labelLarge)
-                Text(text = movie.overview, style = MaterialTheme.typography.bodySmall)
                 Text(text = movie.release_date, style = MaterialTheme.typography.bodySmall)
             }
         }

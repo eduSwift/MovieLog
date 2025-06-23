@@ -10,7 +10,8 @@ import androidx.compose.ui.Modifier
 @Composable
 fun MovieList(
     modifier: Modifier = Modifier,
-    movies: List<Movie>) {
+    movies: List<Movie>
+) {
 
     LazyColumn(modifier = modifier) {
         items(movies) { movie ->
