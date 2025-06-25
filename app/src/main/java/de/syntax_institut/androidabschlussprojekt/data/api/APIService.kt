@@ -20,7 +20,7 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface APIService {
-    @GET("movie/popular")
+    @GET("movie/upcoming")
     suspend fun getPopularMovies(
         @Query("api_key")
         apiKey: String
