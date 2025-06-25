@@ -10,8 +10,6 @@ import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepositor
 import de.syntax_institut.androidabschlussprojekt.BuildConfig
 
 class HomeScreenViewModel : ViewModel() {
-
-
     private val apiKey = BuildConfig.MOVIE_API_KEY
 
     private val repository = MovieRepository()

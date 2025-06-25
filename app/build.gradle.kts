@@ -7,7 +7,7 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
-val apiKey = localProperties.getProperty("API_KEY") ?: ""
+val apiKey = localProperties.getProperty("MOVIE_API_KEY") ?: ""
 
 
 plugins {
