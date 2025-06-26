@@ -7,6 +7,7 @@ import de.syntax_institut.androidabschlussprojekt.data.model.MovieResponse
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Path
 
 const val BASE_URL = "https://api.themoviedb.org/3/"
 
@@ -20,10 +21,10 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface APIService {
-    @GET("movie/upcoming")
-    suspend fun getPopularMovies(
-        @Query("api_key")
-        apiKey: String
+    @GET("movie/{category}")
+    suspend fun getMoviesByCategory(
+        @Path("category") category: String,
+        @Query("api_key") apiKey: String
     ): MovieResponse
 }
 

@@ -1,6 +1,6 @@
 package de.syntax_institut.androidabschlussprojekt.ui.components
 
-import androidx.compose.foundation.clickable // New import for clickable modifier
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,21 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController // New import for NavController
 import coil3.compose.AsyncImage
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
-import java.net.URLEncoder // For URL encoding
-import java.nio.charset.StandardCharsets // For UTF-8 charset
 
-
-fun String.encodeURLPath(): String {
-    return URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
-        .replace("+", "%20")
-}
 
 @Composable
-fun MovieItem(movie: Movie, navController: NavController) {
-
+fun MovieItem(
+    movie: Movie,
+    onMovieClick: (Movie) -> Unit
+) {
     Card(elevation = CardDefaults
         .cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -53,15 +47,7 @@ fun MovieItem(movie: Movie, navController: NavController) {
                 contentDescription = "Movie Image",
                 modifier = Modifier
                     .width(92.dp)
-                    .clickable {
-                        navController.navigate(
-                            "movie_detail_route/" +
-                                    "${movie.poster_path?.encodeURLPath()}/" +
-                                    "${movie.title.encodeURLPath()}/" +
-                                    "${movie.overview.encodeURLPath()}/" +
-                                    "${movie.release_date.encodeURLPath()}"
-                        )
-                    },
+                    .clickable { onMovieClick(movie) },
                 onLoading = { println("Loading image for ${movie.title}")},
                 onError = { println("Error loading image: ${it.result.throwable}")},
             )

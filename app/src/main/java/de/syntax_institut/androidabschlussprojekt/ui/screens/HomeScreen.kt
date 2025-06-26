@@ -1,14 +1,22 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -23,22 +31,34 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost // New import
-import androidx.navigation.compose.composable // New import
-import androidx.navigation.compose.rememberNavController // New import
-import androidx.navigation.navArgument // New import for navigation arguments
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import de.syntax_institut.androidabschlussprojekt.data.model.Movie
+import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
 import de.syntax_institut.androidabschlussprojekt.ui.components.MovieList
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
-import java.net.URLDecoder // For URL decoding
-import java.nio.charset.StandardCharsets // For UTF-8 charset
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.net.URLEncoder
+import androidx.compose.runtime.LaunchedEffect
 
-// Helper extension function to safely decode URL parameters
+
 fun String.decodeURLPath(): String {
     return URLDecoder.decode(this, StandardCharsets.UTF_8.toString())
+}
+
+
+fun String.encodeURLPath(): String {
+    return URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
+        .replace("+", "%20")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,28 +68,64 @@ fun HomeScreen(
     viewModel: HomeScreenViewModel = viewModel()
 ) {
     val moviesList by viewModel.movies.collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
+
+    val navigateToMovie by viewModel.navigateToMovieDetail.collectAsState()
+
     var active by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
+    var expanded by remember { mutableStateOf(false) }
 
     val backgroundColor = Color(0xFFB3D7EA)
-    val navController = rememberNavController() // Create the NavController
+    val navController = rememberNavController()
+
+
+    val onMovieClick: (Movie) -> Unit = { movie ->
+        viewModel.setMovieToNavigateTo(movie)
+        active = false
+    }
+
+
+    LaunchedEffect(navigateToMovie) {
+        navigateToMovie?.let { movie ->
+            val encodedTitle = movie.title.encodeURLPath()
+            val encodedOverview = movie.overview.encodeURLPath()
+            val encodedPosterPath = movie.poster_path?.encodeURLPath() ?: ""
+            val encodedReleaseDate = movie.release_date.encodeURLPath()
+
+            navController.navigate(
+                "movie_detail_route/$encodedPosterPath/$encodedTitle/$encodedOverview/$encodedReleaseDate"
+            )
+            viewModel.onNavigationCompleted()
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             SearchBar(
                 query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = { active = false  },
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                onSearch = { active = false },
                 active = active,
                 onActiveChange = { active = it },
                 placeholder = { Text("Search movies...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search icon") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(Modifier.fillMaxSize().padding(16.dp)) {
-                    Text("Search results will appear here...")
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Search Results",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    MovieList(movies = moviesList, onMovieClick = onMovieClick)
                 }
             }
         },
@@ -79,15 +135,9 @@ fun HomeScreen(
                     selected = selectedTab == 0,
                     onClick = {
                         selectedTab = 0
-                        // Navigate to the main content route when Home tab is selected
                         navController.navigate("home_main_content") {
-                            // Pop up to the start destination to avoid building a large back stack
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            // Avoid multiple copies of the same destination when re-selecting the same item
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
-                            // Restore state when re-selecting a previously selected item
                             restoreState = true
                         }
                     },
@@ -96,59 +146,99 @@ fun HomeScreen(
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
-                    onClick = {
-                        selectedTab = 1
-                        // You could navigate to a separate discover route here if you had one
-                    },
+                    onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Search, contentDescription = "Discover") },
                     label = { Text("Discover") }
+                )
+
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Person") },
+                    label = { Text("Profile") }
                 )
             }
         }
     ) { innerPadding ->
-        // NavHost defines your navigation graph and handles screen switching
-        NavHost(
-            navController = navController,
-            startDestination = "home_main_content", // The initial screen when the app starts
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) // Apply padding from Scaffold
-                .background(backgroundColor) // Apply the background color to the entire NavHost area
+                .background(backgroundColor)
         ) {
-            // Define the route for your main content (Home/Discover tabs)
-            composable("home_main_content") {
-                // The Box is no longer strictly needed if it only wraps the 'when' statement
-                // but can be kept if you intend to add more elements outside the tabs logic later.
-                Box(modifier = Modifier.fillMaxSize()) {
-                    when (selectedTab) {
-                        0 -> MovieList(movies = moviesList, navController = navController) // Pass navController
-                        1 -> Text("Discover Content (Future Tab)", modifier = Modifier.padding(16.dp)) // Added padding for discover text
+            NavHost(
+                navController = navController,
+                startDestination = "home_main_content",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                composable("home_main_content") {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = true }
+                                    .background(Color.White)
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Category: ${selectedCategory.name.replace("_", " ")}",
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(Modifier.weight(1f))
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select category")
+                            }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.fillMaxWidth(0.5f)
+                            ) {
+                                MovieCategory.entries.forEach { category ->
+                                    DropdownMenuItem(
+                                        text = { Text(category.name.replace("_", " ")) },
+                                        onClick = {
+                                            viewModel.updateSelectedCategory(category)
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        MovieList(movies = moviesList, onMovieClick = onMovieClick)
                     }
                 }
-            }
 
-            // Define the route for the Movie Detail Screen
-            composable(
-                route = "movie_detail_route/{posterPath}/{title}/{overview}/{releaseDate}",
-                arguments = listOf(
-                    navArgument("posterPath") { type = androidx.navigation.NavType.StringType; nullable = true },
-                    navArgument("title") { type = androidx.navigation.NavType.StringType; nullable = true },
-                    navArgument("overview") { type = androidx.navigation.NavType.StringType; nullable = true },
-                    navArgument("releaseDate") { type = androidx.navigation.NavType.StringType; nullable = true }
-                )
-            ) { backStackEntry ->
-                val posterPath = backStackEntry.arguments?.getString("posterPath")
-                val title = backStackEntry.arguments?.getString("title")
-                val overview = backStackEntry.arguments?.getString("overview")
-                val releaseDate = backStackEntry.arguments?.getString("releaseDate")
-
-                MovieDetailScreen(
-                    navController = navController,
-                    posterPath = posterPath?.decodeURLPath(), // Decode URL parameters
-                    title = title?.decodeURLPath(),
-                    overview = overview?.decodeURLPath(),
-                    releaseDate = releaseDate?.decodeURLPath()
-                )
+                composable(
+                    route = "movie_detail_route/{posterPath}/{title}/{overview}/{releaseDate}",
+                    arguments = listOf(
+                        navArgument("posterPath") { type = androidx.navigation.NavType.StringType; nullable = true },
+                        navArgument("title") { type = androidx.navigation.NavType.StringType; nullable = true },
+                        navArgument("overview") { type = androidx.navigation.NavType.StringType; nullable = true },
+                        navArgument("releaseDate") { type = androidx.navigation.NavType.StringType; nullable = true }
+                    )
+                ) { backStackEntry ->
+                    val posterPath = backStackEntry.arguments?.getString("posterPath")
+                    val title = backStackEntry.arguments?.getString("title")
+                    val overview = backStackEntry.arguments?.getString("overview")
+                    val releaseDate = backStackEntry.arguments?.getString("releaseDate")
+                    MovieDetailScreen(
+                        navController = navController,
+                        posterPath = posterPath?.decodeURLPath(),
+                        title = title?.decodeURLPath(),
+                        overview = overview?.decodeURLPath(),
+                        releaseDate = releaseDate?.decodeURLPath()
+                    )
+                }
             }
         }
     }
