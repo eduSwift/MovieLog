@@ -117,7 +117,6 @@ fun HomeScreen(
                     selected = selectedTab == 1,
                     onClick = {
                         selectedTab = 1
-                        // Navigate to the search screen
                         navController.navigate("search_screen") {
                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
@@ -195,9 +194,8 @@ fun HomeScreen(
                     }
                 }
 
-                // Make sure to add the composable for the SearchScreen if you haven't already
                 composable("search_screen") {
-                    SearchScreen()
+                    SearchScreen(onMovieClick = onMovieClick)
                 }
 
                 composable(

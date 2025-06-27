@@ -2,6 +2,7 @@ package de.syntax_institut.androidabschlussprojekt.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,7 +27,7 @@ fun AppLogoHeader(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .background(backgroundColor)
             .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.movielogicon),

@@ -53,7 +53,7 @@ fun MovieDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title ?: "Movie Details") },
+                title = { Text(title ?: "") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
