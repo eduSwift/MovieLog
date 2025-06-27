@@ -64,20 +64,20 @@ fun MovieItem(
 
                 Row {
                     Button(
-                        onClick = { /* Handle "Watched It" click for movie.title */ },
+                        onClick = { },
                         modifier = Modifier.padding(end = 4.dp)
                     ) {
-                        Text("Watched It")
+                        Text("Watched")
                     }
 
                     OutlinedButton(
-                        onClick = { /* Handle "Wishlist" click for movie.title */ },
+                        onClick = { },
                         modifier = Modifier.padding(end = 4.dp)
                     ) {
                         Text("Wishlist")
                     }
 
-                    IconButton(onClick = { /* Handle "Favorite" click for movie.title */ }) {
+                    IconButton(onClick = {  }) {
                         Icon(Icons.Default.FavoriteBorder, contentDescription = "Add to Favorites")
                     }
                 }

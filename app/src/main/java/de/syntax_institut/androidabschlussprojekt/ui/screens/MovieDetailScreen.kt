@@ -121,18 +121,18 @@ fun MovieDetailScreen(
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     Button(
-                        onClick = { /* Handle "Watched It" click for this movie */ }
+                        onClick = { }
                     ) {
                         Text("Watched It")
                     }
 
                     Button(
-                        onClick = { /* Handle "Wishlist" click for this movie */ }
+                        onClick = {  }
                     ) {
                         Text("Wishlist")
                     }
 
-                    IconButton(onClick = { /* Handle "Favorite" click for this movie */ }) {
+                    IconButton(onClick = { }) {
                         Icon(Icons.Default.FavoriteBorder, contentDescription = "Add to Favorites")
                     }
                 }

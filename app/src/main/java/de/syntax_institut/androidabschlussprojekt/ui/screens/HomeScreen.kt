@@ -22,9 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -43,18 +43,16 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
+import de.syntax_institut.androidabschlussprojekt.ui.components.AppLogoHeader
 import de.syntax_institut.androidabschlussprojekt.ui.components.MovieList
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.net.URLEncoder
-import androidx.compose.runtime.LaunchedEffect
-
+import java.nio.charset.StandardCharsets
 
 fun String.decodeURLPath(): String {
     return URLDecoder.decode(this, StandardCharsets.UTF_8.toString())
 }
-
 
 fun String.encodeURLPath(): String {
     return URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
@@ -68,24 +66,18 @@ fun HomeScreen(
     viewModel: HomeScreenViewModel = viewModel()
 ) {
     val moviesList by viewModel.movies.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
-
     val navigateToMovie by viewModel.navigateToMovieDetail.collectAsState()
 
-    var active by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
     var expanded by remember { mutableStateOf(false) }
 
     val backgroundColor = Color(0xFFB3D7EA)
     val navController = rememberNavController()
 
-
     val onMovieClick: (Movie) -> Unit = { movie ->
         viewModel.setMovieToNavigateTo(movie)
-        active = false
     }
-
 
     LaunchedEffect(navigateToMovie) {
         navigateToMovie?.let { movie ->
@@ -104,30 +96,7 @@ fun HomeScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { viewModel.updateSearchQuery(it) },
-                onSearch = { active = false },
-                active = active,
-                onActiveChange = { active = it },
-                placeholder = { Text("Search movies...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search icon") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor)
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Search Results",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    MovieList(movies = moviesList, onMovieClick = onMovieClick)
-                }
-            }
+            AppLogoHeader()
         },
         bottomBar = {
             NavigationBar {
@@ -146,9 +115,17 @@ fun HomeScreen(
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.Search, contentDescription = "Discover") },
-                    label = { Text("Discover") }
+                    onClick = {
+                        selectedTab = 1
+                        // Navigate to the search screen
+                        navController.navigate("search_screen") {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    label = { Text("Search") }
                 )
 
                 NavigationBarItem(
@@ -216,6 +193,11 @@ fun HomeScreen(
 
                         MovieList(movies = moviesList, onMovieClick = onMovieClick)
                     }
+                }
+
+                // Make sure to add the composable for the SearchScreen if you haven't already
+                composable("search_screen") {
+                    SearchScreen()
                 }
 
                 composable(
