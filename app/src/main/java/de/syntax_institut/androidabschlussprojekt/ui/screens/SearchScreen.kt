@@ -21,17 +21,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.ui.components.MovieList
-import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeScreenViewModel = viewModel(),
+    viewModel: SearchScreenViewModel = koinViewModel(),
     onMovieClick: (Movie) -> Unit
 ) {
     val moviesList by viewModel.movies.collectAsState()
@@ -71,4 +71,3 @@ fun SearchScreen(
         }
     }
 }
-

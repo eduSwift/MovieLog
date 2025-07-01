@@ -1,81 +1,45 @@
 package de.syntax_institut.androidabschlussprojekt.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.syntax_institut.androidabschlussprojekt.data.model.Movie
+import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
+import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
-import de.syntax_institut.androidabschlussprojekt.data.model.Movie
-import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
-import de.syntax_institut.androidabschlussprojekt.BuildConfig
-import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
 
-class HomeScreenViewModel : ViewModel() {
-    private val apiKey = BuildConfig.MOVIE_API_KEY
-    private val repository = MovieRepository()
+class HomeScreenViewModel(private val repository: MovieRepository) : ViewModel() {
 
-    private val _allMoviesForCategory = MutableStateFlow<List<Movie>>(emptyList())
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    private val _selectedCategory = MutableStateFlow(MovieCategory.POPULAR)
-    val selectedCategory: StateFlow<MovieCategory> = _selectedCategory.asStateFlow()
-
-    private val _navigateToMovieDetail = MutableStateFlow<Movie?>(null)
-    val navigateToMovieDetail: StateFlow<Movie?> = _navigateToMovieDetail.asStateFlow()
-
-    val movies: StateFlow<List<Movie>> = _allMoviesForCategory.combine(_searchQuery) { allMovies, query ->
-        if (query.isBlank()) {
-            allMovies
-        } else {
-            allMovies.filter { movie ->
-                movie.title.contains(query, ignoreCase = true)
-            }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    // Example: State for a list of popular movies for the home screen
+    private val _popularMovies = MutableStateFlow<List<Movie>>(emptyList())
+    val popularMovies: StateFlow<List<Movie>> = _popularMovies
 
     init {
-        viewModelScope.launch {
-            _selectedCategory.collect { category ->
-                loadMovies(category)
-            }
-        }
+        // Fetch initial data for the home screen (e.g., popular movies)
+        fetchPopularMovies()
     }
 
-    private fun loadMovies(category: MovieCategory) {
+    private fun fetchPopularMovies() {
         viewModelScope.launch {
             try {
-                val fetchedMovies = repository.getMoviesByCategory(category)
-                _allMoviesForCategory.value = fetchedMovies
+                // You might have a different method in your repository for popular movies
+                val movies = repository.getMoviesByCategory(MovieCategory.POPULAR) // Assuming POPULAR category exists
+                _popularMovies.value = movies
             } catch (e: Exception) {
-                println("Error loading movies for category ${category.name}: ${e.message}")
-                e.printStackTrace()
-                _allMoviesForCategory.value = emptyList()
+                Log.e("HomeScreenViewModel", "Error fetching popular movies: ${e.message}", e)
             }
         }
     }
 
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
+    // Remove search-related properties and functions from here
+    // as they are now in SearchScreenViewModel
+    // private val _movies = MutableStateFlow<List<Movie>>(emptyList())
+    // val movies: StateFlow<List<Movie>> = _movies
 
-    fun updateSelectedCategory(category: MovieCategory) {
-        _selectedCategory.value = category
-    }
+    // private val _searchQuery = MutableStateFlow("")
+    // val searchQuery: StateFlow<String> = _searchQuery
 
-    fun setMovieToNavigateTo(movie: Movie) {
-        _navigateToMovieDetail.value = movie
-    }
-
-    fun onNavigationCompleted() {
-        _navigateToMovieDetail.value = null
-    }
+    // fun updateSearchQuery(query: String) { ... }
 }
