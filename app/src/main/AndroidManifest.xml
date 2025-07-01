@@ -9,7 +9,6 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:name=".di.App"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidAbschlussprojekt"
@@ -17,6 +16,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:label="@string/app_name"
             android:theme="@style/Theme.AndroidAbschlussprojekt">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

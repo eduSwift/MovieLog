@@ -16,7 +16,6 @@ coilCompose = "3.0.0-rc02"
 material3 = "1.2.1"
 navigationCompose = "2.8.3"
 kotlinSerialization = "1.6.3"
-koinBom = "4.1.0-Beta4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,10 +43,6 @@ coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref 
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coilCompose" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
-koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
-koin-core = { module = "io.insert-koin:koin-core" }
-koin-android = { module = "io.insert-koin:koin-android" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

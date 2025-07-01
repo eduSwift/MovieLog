@@ -123,7 +123,7 @@ fun MovieDetailScreen(
                     Button(
                         onClick = { }
                     ) {
-                        Text("Watched")
+                        Text("Watched It")
                     }
 
                     Button(

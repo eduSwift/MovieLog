@@ -32,7 +32,12 @@ fun AppLogoHeader(modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(id = R.drawable.movielogicon),
             contentDescription = "App Logo",
-            modifier = Modifier.size(300.dp)
+            modifier = Modifier.size(160.dp)
+        )
+        Text(
+            text = "",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 8.dp)
         )
     }
 }

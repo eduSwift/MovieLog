@@ -1,5 +1,4 @@
 
-import org.gradle.kotlin.dsl.implementation
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -92,11 +91,5 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization)
-    implementation(project.dependencies.platform(libs.koin.bom))
-    implementation(libs.koin.core)
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-
-
 
 }
