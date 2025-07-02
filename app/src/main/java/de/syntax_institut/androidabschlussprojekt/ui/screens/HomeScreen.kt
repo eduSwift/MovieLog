@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -46,6 +45,7 @@ import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
 import de.syntax_institut.androidabschlussprojekt.ui.components.AppLogoHeader
 import de.syntax_institut.androidabschlussprojekt.ui.components.MovieList
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
+import org.koin.androidx.compose.koinViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -63,7 +63,7 @@ fun String.encodeURLPath(): String {
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeScreenViewModel = viewModel()
+    viewModel: HomeScreenViewModel = koinViewModel()
 ) {
     val moviesList by viewModel.movies.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()

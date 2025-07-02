@@ -2,21 +2,15 @@ package de.syntax_institut.androidabschlussprojekt.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.launch
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
-import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
-import de.syntax_institut.androidabschlussprojekt.BuildConfig
 import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
+import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-class HomeScreenViewModel : ViewModel() {
-    private val apiKey = BuildConfig.MOVIE_API_KEY
-    private val repository = MovieRepository()
+class HomeScreenViewModel(
+    private val repository: MovieRepository
+) : ViewModel() {
 
     private val _allMoviesForCategory = MutableStateFlow<List<Movie>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
@@ -28,19 +22,21 @@ class HomeScreenViewModel : ViewModel() {
     private val _navigateToMovieDetail = MutableStateFlow<Movie?>(null)
     val navigateToMovieDetail: StateFlow<Movie?> = _navigateToMovieDetail.asStateFlow()
 
-    val movies: StateFlow<List<Movie>> = _allMoviesForCategory.combine(_searchQuery) { allMovies, query ->
-        if (query.isBlank()) {
-            allMovies
-        } else {
-            allMovies.filter { movie ->
-                movie.title.contains(query, ignoreCase = true)
+    val movies: StateFlow<List<Movie>> = _allMoviesForCategory
+        .combine(_searchQuery) { allMovies, query ->
+            if (query.isBlank()) {
+                allMovies
+            } else {
+                allMovies.filter { movie ->
+                    movie.title.contains(query, ignoreCase = true)
+                }
             }
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     init {
         viewModelScope.launch {
@@ -57,7 +53,6 @@ class HomeScreenViewModel : ViewModel() {
                 _allMoviesForCategory.value = fetchedMovies
             } catch (e: Exception) {
                 println("Error loading movies for category ${category.name}: ${e.message}")
-                e.printStackTrace()
                 _allMoviesForCategory.value = emptyList()
             }
         }
