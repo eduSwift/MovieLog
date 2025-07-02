@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -34,5 +35,5 @@ val appModule = module {
     single { MovieRepository(get()) }
 
     viewModelOf(::HomeScreenViewModel)
-    //viewModelOf(::SearchScreenViewModel)
+    viewModelOf(::SearchScreenViewModel)
 }

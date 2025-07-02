@@ -12,5 +12,11 @@ interface APIService {
         @Path("category") category: String,
         @Query("api_key") apiKey: String
     ): MovieResponse
+
+    @GET("search/movie")
+    suspend fun searchMovies(
+        @Query("query") query: String,
+        @Query("api_key") apiKey: String
+    ): MovieResponse
 }
 

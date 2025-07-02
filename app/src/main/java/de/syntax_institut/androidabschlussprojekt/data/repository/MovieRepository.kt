@@ -14,4 +14,11 @@ class MovieRepository(
             apiKey = BuildConfig.MOVIE_API_KEY
         ).results
     }
+
+    suspend fun searchMovies(query: String): List<Movie> {
+        return api.searchMovies(
+            query = query,
+            apiKey = BuildConfig.MOVIE_API_KEY
+        ).results
+    }
 }
