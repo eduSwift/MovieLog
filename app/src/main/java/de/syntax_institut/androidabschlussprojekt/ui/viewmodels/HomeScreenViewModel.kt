@@ -5,65 +5,41 @@ import androidx.lifecycle.viewModelScope
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(
     private val repository: MovieRepository
 ) : ViewModel() {
 
-    private val _allMoviesForCategory = MutableStateFlow<List<Movie>>(emptyList())
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    private val _selectedCategory = MutableStateFlow(MovieCategory.POPULAR)
-    val selectedCategory: StateFlow<MovieCategory> = _selectedCategory.asStateFlow()
+    private val _moviesByCategory = MutableStateFlow<Map<MovieCategory, List<Movie>>>(emptyMap())
+    val moviesByCategory: StateFlow<Map<MovieCategory, List<Movie>>> = _moviesByCategory.asStateFlow()
 
     private val _navigateToMovieDetail = MutableStateFlow<Movie?>(null)
     val navigateToMovieDetail: StateFlow<Movie?> = _navigateToMovieDetail.asStateFlow()
 
-    val movies: StateFlow<List<Movie>> = _allMoviesForCategory
-        .combine(_searchQuery) { allMovies, query ->
-            if (query.isBlank()) {
-                allMovies
-            } else {
-                allMovies.filter { movie ->
-                    movie.title.contains(query, ignoreCase = true)
+    init {
+        loadAllCategories()
+    }
+
+    private fun loadAllCategories() {
+        viewModelScope.launch {
+            val categoryMovieMap = mutableMapOf<MovieCategory, List<Movie>>()
+
+            for (category in MovieCategory.entries) {
+                try {
+                    val movies = repository.getMoviesByCategory(category)
+                    categoryMovieMap[category] = movies
+                } catch (e: Exception) {
+                    println("Error loading ${category.name}: ${e.message}")
+                    categoryMovieMap[category] = emptyList()
                 }
             }
+
+            _moviesByCategory.value = categoryMovieMap
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    init {
-        viewModelScope.launch {
-            _selectedCategory.collect { category ->
-                loadMovies(category)
-            }
-        }
-    }
-
-    private fun loadMovies(category: MovieCategory) {
-        viewModelScope.launch {
-            try {
-                val fetchedMovies = repository.getMoviesByCategory(category)
-                _allMoviesForCategory.value = fetchedMovies
-            } catch (e: Exception) {
-                println("Error loading movies for category ${category.name}: ${e.message}")
-                _allMoviesForCategory.value = emptyList()
-            }
-        }
-    }
-
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
-
-    fun updateSelectedCategory(category: MovieCategory) {
-        _selectedCategory.value = category
     }
 
     fun setMovieToNavigateTo(movie: Movie) {

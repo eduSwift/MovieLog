@@ -5,19 +5,21 @@ coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.7"
+lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
-composeBom = "2024.04.01"
-retrofitVersion = "2.11.0"
+composeBom = "2025.06.01"
+retrofitVersion = "3.0.0"
 moshiVersion = "1.15.0"
-roomRuntime = "2.6.0"
+roomRuntime = "2.7.2"
 kspVersion = "2.0.21-1.0.25"
 coilCompose = "3.0.0-rc02"
 material3 = "1.2.1"
-navigationCompose = "2.8.3"
+navigationCompose = "2.9.1"
 kotlinSerialization = "1.6.3"
 koinBom = "4.1.0-Beta4"
-navigationComposeAndroid = "2.9.0"
+navigationComposeAndroid = "2.9.1"
+constraintlayout = "1.1.0-alpha10"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +52,8 @@ koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose-android", version.ref = "navigationComposeAndroid" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version = "1.1.0-alpha10" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

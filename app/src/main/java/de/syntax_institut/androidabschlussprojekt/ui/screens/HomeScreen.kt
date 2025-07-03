@@ -1,21 +1,21 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
-import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
-import de.syntax_institut.androidabschlussprojekt.ui.components.AppLogoHeader
-import de.syntax_institut.androidabschlussprojekt.ui.components.MovieList
+import de.syntax_institut.androidabschlussprojekt.ui.components.MovieCardItem
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -27,59 +27,34 @@ fun HomeScreen(
     onSearchClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    val moviesList by viewModel.movies.collectAsState()
-    val selectedCategory by viewModel.selectedCategory.collectAsState()
-    var expanded by remember { mutableStateOf(false) }
-
+    val moviesByCategory = viewModel.moviesByCategory.collectAsState()
     val backgroundColor = Color(0xFFB3D7EA)
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(backgroundColor)
+            .padding(16.dp)
     ) {
-        AppLogoHeader()
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = true }
-                    .background(Color.White)
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        moviesByCategory.value.forEach { (category, movies) ->
+            item {
                 Text(
-                    text = "Category: ${selectedCategory.name.replace("_", " ")}",
-                    fontWeight = FontWeight.Bold
+                    text = category.name.replace("_", " "),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                 )
-                Spacer(Modifier.weight(1f))
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select category")
             }
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.5f)
-            ) {
-                MovieCategory.entries.forEach { category ->
-                    DropdownMenuItem(
-                        text = { Text(category.name.replace("_", " ")) },
-                        onClick = {
-                            viewModel.updateSelectedCategory(category)
-                            expanded = false
-                        }
-                    )
+            item {
+                LazyRow(contentPadding = PaddingValues(horizontal = 0.dp)) {
+                    items(movies) { movie ->
+                        MovieCardItem(
+                            movie = movie,
+                            onClick = { onMovieClick(movie) }
+                        )
+                    }
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        MovieList(movies = moviesList, onMovieClick = onMovieClick)
     }
 }
