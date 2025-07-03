@@ -1,8 +1,12 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.ui.components.MovieCardItem
@@ -38,11 +44,22 @@ fun HomeScreen(
     ) {
         moviesByCategory.value.forEach { (category, movies) ->
             item {
-                Text(
-                    text = category.name.replace("_", " "),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-                )
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                ) {
+                    Text(
+                        text = category.name.replace("_", " "),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.Black,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                        textAlign = TextAlign.Start
+                    )
+                }
             }
 
             item {
