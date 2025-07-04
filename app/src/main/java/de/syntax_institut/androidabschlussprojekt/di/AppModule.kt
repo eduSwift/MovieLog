@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -36,4 +37,5 @@ val appModule = module {
 
     viewModelOf(::HomeScreenViewModel)
     viewModelOf(::SearchScreenViewModel)
+    viewModelOf(::AuthViewModel)
 }

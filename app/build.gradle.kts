@@ -17,6 +17,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+
 }
 
 
@@ -99,5 +100,10 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha10")
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 
 }
+
+apply(plugin = "com.google.gms.google-services")

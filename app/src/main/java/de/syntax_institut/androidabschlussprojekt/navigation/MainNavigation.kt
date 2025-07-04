@@ -13,6 +13,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.screens.HomeScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.MovieDetailScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.SearchScreen
 import androidx.compose.ui.Modifier
+import de.syntax_institut.androidabschlussprojekt.ui.screens.ProfileScreen
 
 
 @Composable
@@ -67,6 +68,10 @@ fun MainNavigation(
             )
         }
 
-        // TODO: Add ProfileScreen later using same pattern
+        composable(Routes.PROFILE) {
+            MainScaffold(navController = navController) { innerPadding ->
+                ProfileScreen()
+            }
+        }
     }
 }

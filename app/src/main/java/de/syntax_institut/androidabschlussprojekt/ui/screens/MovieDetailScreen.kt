@@ -1,5 +1,6 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -28,6 +29,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,10 +40,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,9 +55,12 @@ fun MovieDetailScreen(
     posterPath: String?,
     title: String?,
     overview: String?,
-    releaseDate: String?
+    releaseDate: String?,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val backgroundColor = Color(0xFFB3D7EA)
+    val context = LocalContext.current
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
     val fullPosterUrl = if (!posterPath.isNullOrEmpty()) {
         "https://image.tmdb.org/t/p/w500/$posterPath"
@@ -160,15 +168,33 @@ fun MovieDetailScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedButton(onClick = { /* TODO */ }) {
+                OutlinedButton(onClick = {
+                    if (isAuthenticated) {
+                        // coming soon
+                    } else {
+                        Toast.makeText(context, "Please log in to use this feature", Toast.LENGTH_SHORT).show()
+                    }
+                }) {
                     Text("Want to Watch")
                 }
 
-                OutlinedButton(onClick = { /* TODO */ }) {
+                OutlinedButton(onClick = {
+                    if (isAuthenticated) {
+                        // coming soon
+                    } else {
+                        Toast.makeText(context, "Please log in to use this feature", Toast.LENGTH_SHORT).show()
+                    }
+                }) {
                     Text("Watched")
                 }
 
-                IconButton(onClick = { /* TODO */ }) {
+                IconButton(onClick = {
+                    if (isAuthenticated) {
+                        // coming soon
+                    } else {
+                        Toast.makeText(context, "Please log in to use this feature", Toast.LENGTH_SHORT).show()
+                    }
+                }) {
                     Icon(
                         imageVector = Icons.Default.FavoriteBorder,
                         contentDescription = "Add to Favorites"

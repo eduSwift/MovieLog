@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1054259519501",
+    "project_id": "movielog-a58cc",
+    "storage_bucket": "movielog-a58cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1054259519501:android:466ee5e568cfd550d9b544",
+        "android_client_info": {
+          "package_name": "de.syntax_institut.androidabschlussprojekt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1ZMK9hb289kIwwqTRymZ5wdW3PiDiYuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
