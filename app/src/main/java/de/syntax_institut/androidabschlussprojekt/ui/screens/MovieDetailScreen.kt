@@ -172,7 +172,7 @@ fun MovieDetailScreen(
                     if (isAuthenticated) {
                         // coming soon
                     } else {
-                        Toast.makeText(context, "Please log in to use this feature", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
                 }) {
                     Text("Want to Watch")
@@ -182,7 +182,7 @@ fun MovieDetailScreen(
                     if (isAuthenticated) {
                         // coming soon
                     } else {
-                        Toast.makeText(context, "Please log in to use this feature", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
                 }) {
                     Text("Watched")
@@ -192,7 +192,7 @@ fun MovieDetailScreen(
                     if (isAuthenticated) {
                         // coming soon
                     } else {
-                        Toast.makeText(context, "Please log in to use this feature", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
                 }) {
                     Icon(

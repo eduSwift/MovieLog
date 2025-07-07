@@ -4,11 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.navigation.MainNavigation
 import de.syntax_institut.androidabschlussprojekt.navigation.Routes
 import de.syntax_institut.androidabschlussprojekt.ui.theme.AndroidAbschlussprojektTheme
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,9 +20,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroidAbschlussprojektTheme {
                 val navController = rememberNavController()
+                val authViewModel: AuthViewModel = viewModel()
 
                 MainNavigation(
                     navController = navController,
+                    authViewModel = authViewModel,
+                    onLoginSuccess = {
+                        navController.navigate("profile") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    },
                     onNavigateToMovieDetail = { movie: Movie ->
                         val route = Routes.movieDetailRoute(
                             posterPath = movie.poster_path ?: "",

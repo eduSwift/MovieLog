@@ -1,12 +1,18 @@
 package de.syntax_institut.androidabschlussprojekt.di
 
+import androidx.room.Room
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
+import de.syntax_institut.androidabschlussprojekt.data.database.AppDatabase
+import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
+import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
+import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -33,9 +39,22 @@ val appModule = module {
         get<Retrofit>().create(APIService::class.java)
     }
 
-    single { MovieRepository(get()) }
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            AppDatabase::class.java,
+            "movie_app_database"
+        ).build()
+    }
+
+    single<UserDao> { get<AppDatabase>().userDao() }
+    single<MovieDao> { get<AppDatabase>().movieDao() }
+
+    single { UserRepository(get()) }
+    single { MovieRepository(api = get(), movieDao = get()) }
 
     viewModelOf(::HomeScreenViewModel)
     viewModelOf(::SearchScreenViewModel)
     viewModelOf(::AuthViewModel)
+
 }
