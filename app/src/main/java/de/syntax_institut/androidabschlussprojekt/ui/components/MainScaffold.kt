@@ -29,7 +29,7 @@ fun MainScaffold(
     val items = listOf(
         Routes.HOME to Icons.Default.Home,
         Routes.SEARCH to Icons.Default.Search,
-        Routes.PROFILE to Icons.Default.Person
+        Routes.AUTH to Icons.Default.Person
     )
 
     Scaffold(
