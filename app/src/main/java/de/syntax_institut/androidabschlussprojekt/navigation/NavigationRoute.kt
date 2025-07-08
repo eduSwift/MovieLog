@@ -1,7 +1,5 @@
 package de.syntax_institut.androidabschlussprojekt.navigation
 
-import com.google.android.gms.auth.api.Auth
-import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -15,7 +13,7 @@ fun String.decodeURLPath(): String =
 object Routes {
     const val HOME = "home"
     const val SEARCH = "search"
-    const val AUTH = "profile"
+    const val PROFILE = "profile"
     const val MOVIE_DETAIL = "movie_detail/{posterPath}/{title}/{overview}/{releaseDate}"
 
     fun movieDetailRoute(

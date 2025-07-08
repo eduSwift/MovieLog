@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
-
     private val auth = FirebaseAuth.getInstance()
 
     private val _isAuthenticated = MutableStateFlow(auth.currentUser != null)
@@ -17,22 +16,12 @@ class AuthViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _currentUserId = MutableStateFlow(auth.currentUser?.uid)
-    val currentUserId: StateFlow<String?> = _currentUserId
-
-    private val _wasJustRegistered = MutableStateFlow(false)
-    val wasJustRegistered: StateFlow<Boolean> = _wasJustRegistered
-
     fun login(email: String, password: String) {
         viewModelScope.launch {
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        _isAuthenticated.value = true
-                        _currentUserId.value = auth.currentUser?.uid
-                        _wasJustRegistered.value = false
-                    } else {
-                        _isAuthenticated.value = false
+                    _isAuthenticated.value = task.isSuccessful
+                    if (!task.isSuccessful) {
                         _errorMessage.value = task.exception?.localizedMessage
                     }
                 }
@@ -43,12 +32,8 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        _isAuthenticated.value = true
-                        _currentUserId.value = auth.currentUser?.uid
-                        _wasJustRegistered.value = true
-                    } else {
-                        _isAuthenticated.value = false
+                    _isAuthenticated.value = task.isSuccessful
+                    if (!task.isSuccessful) {
                         _errorMessage.value = task.exception?.localizedMessage
                     }
                 }
@@ -58,11 +43,5 @@ class AuthViewModel : ViewModel() {
     fun logout() {
         auth.signOut()
         _isAuthenticated.value = false
-        _currentUserId.value = null
-        _wasJustRegistered.value = false // ✅ reset
-    }
-
-    fun setError(message: String?) {
-        _errorMessage.value = message
     }
 }
