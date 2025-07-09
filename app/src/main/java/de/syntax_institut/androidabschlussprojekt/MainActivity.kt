@@ -20,16 +20,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroidAbschlussprojektTheme {
                 val navController = rememberNavController()
-                val authViewModel: AuthViewModel = viewModel()
+                val authViewModel: AuthViewModel = viewModel() // ✅ instantiate ViewModel
 
                 MainNavigation(
                     navController = navController,
-                    authViewModel = authViewModel,
-                    onLoginSuccess = {
-                        navController.navigate("profile") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    },
+                    authViewModel = authViewModel, // ✅ pass it in
                     onNavigateToMovieDetail = { movie: Movie ->
                         val route = Routes.movieDetailRoute(
                             posterPath = movie.poster_path ?: "",

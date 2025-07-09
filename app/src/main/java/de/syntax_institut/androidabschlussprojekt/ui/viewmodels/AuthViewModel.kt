@@ -23,6 +23,10 @@ class AuthViewModel : ViewModel() {
     private val _wasJustRegistered = MutableStateFlow(false)
     val wasJustRegistered: StateFlow<Boolean> = _wasJustRegistered
 
+    // ✅ Track logout to trigger navigation in MainNavigation
+    private val _didLogout = MutableStateFlow(false)
+    val didLogout: StateFlow<Boolean> = _didLogout
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             auth.signInWithEmailAndPassword(email, password)
@@ -31,6 +35,7 @@ class AuthViewModel : ViewModel() {
                         _isAuthenticated.value = true
                         _currentUserId.value = auth.currentUser?.uid
                         _wasJustRegistered.value = false
+                        _errorMessage.value = null
                     } else {
                         _isAuthenticated.value = false
                         _errorMessage.value = task.exception?.localizedMessage
@@ -47,6 +52,7 @@ class AuthViewModel : ViewModel() {
                         _isAuthenticated.value = true
                         _currentUserId.value = auth.currentUser?.uid
                         _wasJustRegistered.value = true
+                        _errorMessage.value = null
                     } else {
                         _isAuthenticated.value = false
                         _errorMessage.value = task.exception?.localizedMessage
@@ -59,7 +65,12 @@ class AuthViewModel : ViewModel() {
         auth.signOut()
         _isAuthenticated.value = false
         _currentUserId.value = null
-        _wasJustRegistered.value = false // ✅ reset
+        _wasJustRegistered.value = false
+        _didLogout.value = true // ✅ trigger global redirect
+    }
+
+    fun clearLogoutFlag() {
+        _didLogout.value = false
     }
 
     fun setError(message: String?) {

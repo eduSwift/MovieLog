@@ -29,9 +29,10 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeScreenViewModel = koinViewModel(),
+    isAuthenticated: Boolean,
     onMovieClick: (Movie) -> Unit,
     onSearchClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: (Boolean) -> Unit
 ) {
     val moviesByCategory = viewModel.moviesByCategory.collectAsState()
     val backgroundColor = Color(0xFFB3D7EA)
@@ -74,4 +75,7 @@ fun HomeScreen(
             }
         }
     }
+
+    // ✅ Somewhere in your UI, call:
+    // onProfileClick(isAuthenticated)
 }
