@@ -14,7 +14,7 @@ fun String.decodeURLPath(): String =
 object Routes {
     const val HOME = "home"
     const val SEARCH = "search"
-    const val AUTH = "auth"
+    const val AUTH = "profile"
     const val PROFILE = "PROFILE"
     const val PROFILE_ENTRY = "profile_entry"
     const val MOVIE_DETAIL = "movie_detail/{posterPath}/{title}/{overview}/{releaseDate}"

@@ -46,7 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,11 +59,13 @@ fun MovieDetailScreen(
     title: String?,
     overview: String?,
     releaseDate: String?,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    movieViewModel: MovieViewModel = koinViewModel()
 ) {
     val backgroundColor = Color(0xFFB3D7EA)
     val context = LocalContext.current
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val userId by authViewModel.currentUserId.collectAsState()
 
     val fullPosterUrl = if (!posterPath.isNullOrEmpty()) {
         "https://image.tmdb.org/t/p/w500/$posterPath"
@@ -81,6 +86,15 @@ fun MovieDetailScreen(
     LaunchedEffect(Unit) {
         visible = true
     }
+
+    val movieEntity = MovieEntity(
+        id = posterPath.hashCode(), // Replace with a real movie ID if available
+        userId = userId ?: "",
+        title = title ?: "",
+        posterPath = posterPath ?: "",
+        overview = overview ?: "",
+        releaseDate = releaseDate ?: ""
+    )
 
     Scaffold(
         topBar = {
@@ -169,8 +183,9 @@ fun MovieDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedButton(onClick = {
-                    if (isAuthenticated) {
-                        // coming soon
+                    if (isAuthenticated && userId != null) {
+                        movieViewModel.toggleFlag(userId!!, movieEntity, "wantToWatch")
+                        Toast.makeText(context, "Added to Want to Watch", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
@@ -179,8 +194,9 @@ fun MovieDetailScreen(
                 }
 
                 OutlinedButton(onClick = {
-                    if (isAuthenticated) {
-                        // coming soon
+                    if (isAuthenticated && userId != null) {
+                        movieViewModel.toggleFlag(userId!!, movieEntity, "watched")
+                        Toast.makeText(context, "Marked as Watched", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
@@ -189,8 +205,9 @@ fun MovieDetailScreen(
                 }
 
                 IconButton(onClick = {
-                    if (isAuthenticated) {
-                        // coming soon
+                    if (isAuthenticated && userId != null) {
+                        movieViewModel.toggleFlag(userId!!, movieEntity, "favorite")
+                        Toast.makeText(context, "Added to Favorites", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
