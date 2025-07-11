@@ -43,7 +43,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
@@ -59,7 +58,7 @@ fun MovieDetailScreen(
     title: String?,
     overview: String?,
     releaseDate: String?,
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = koinViewModel(),
     movieViewModel: MovieViewModel = koinViewModel()
 ) {
     val backgroundColor = Color(0xFFB3D7EA)

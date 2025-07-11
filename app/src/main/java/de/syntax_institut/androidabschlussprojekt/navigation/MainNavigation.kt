@@ -1,9 +1,7 @@
 package de.syntax_institut.androidabschlussprojekt.navigation
 
-
-import androidx.compose.foundation.layout.Box
+import android.util.Log // Import Log
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -25,13 +23,15 @@ fun MainNavigation(
     val didLogout by authViewModel.didLogout.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
+    // Centralized logout navigation
     LaunchedEffect(didLogout) {
         if (didLogout) {
-            navController.navigate(Routes.PROFILE_ENTRY) {
-                popUpTo(Routes.HOME) { inclusive = false }
+            Log.d("MainNavigation", "Logout detected. Navigating to AUTH_FLOW.")
+            navController.navigate(Routes.AUTH_FlOW) {
+                popUpTo(Routes.HOME) { inclusive = false } // Keep HOME, clear everything else
                 launchSingleTop = true
             }
-            authViewModel.clearLogoutFlag()
+            authViewModel.clearLogoutFlag() // Clear the flag after navigation
         }
     }
 
@@ -45,8 +45,8 @@ fun MainNavigation(
                     modifier = Modifier.padding(innerPadding),
                     onMovieClick = onNavigateToMovieDetail,
                     isAuthenticated = isAuthenticated,
-                    onSearchClick = { navController.navigate(Routes.SEARCH) },
-                    onProfileClick = { navController.navigate(Routes.PROFILE_ENTRY) }
+                    onProfileClick = { navController.navigate(Routes.AUTH_FlOW) }, // Direct to AUTH_FLOW
+                    onSearchClick = { navController.navigate(Routes.SEARCH) }
                 )
             }
         }
@@ -83,40 +83,57 @@ fun MainNavigation(
             )
         }
 
-        composable(Routes.PROFILE_ENTRY) {
-            LaunchedEffect(isAuthenticated) {
-                val target = if (isAuthenticated) Routes.PROFILE else Routes.AUTH
-                navController.navigate(target) {
-                    popUpTo(Routes.HOME) { inclusive = false }
-                    launchSingleTop = true
+        // This is the unified profile/authentication entry point
+        composable(Routes.AUTH_FlOW) {
+            MainScaffold(navController = navController) { innerPadding ->
+                // Log for debugging the state change
+                Log.d("MainNavigation", "AUTH_FLOW composable, isAuthenticated: $isAuthenticated")
+                if (isAuthenticated) {
+                    Log.d("MainNavigation", "Authenticated: Displaying ProfileScreen.")
+                    ProfileScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        navController = navController,
+                    )
+                } else {
+                    Log.d("MainNavigation", "Not authenticated: Displaying AuthScreen.")
+                    AuthScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onLoginSuccess = {
+                            // This callback is triggered when AuthScreen's internal logic determines
+                            // it should navigate away (e.g., after successful login/registration)
+                            Log.d("MainNavigation", "AuthScreen onLoginSuccess called. Current isAuthenticated: $isAuthenticated")
+                            // The isAuthenticated state will have already been updated by AuthViewModel.
+                            // We don't need to re-navigate to AUTH_FLOW here because the AuthScreen
+                            // is already being displayed *within* AUTH_FLOW.
+                            // When isAuthenticated becomes true, the `if (isAuthenticated)` condition
+                            // above will automatically cause a recomposition to show ProfileScreen.
+                            // No explicit navController.navigate(Routes.AUTH_FLOW) needed here from onLoginSuccess
+                            // unless you want to explicitly push a new instance or clear stack.
+                            // For a seamless transition, simply letting the state change propagate is best.
+                            // However, if you explicitly navigate to AUTH_FLOW *again*, it ensures
+                            // the AuthScreen instance is popped and ProfileScreen is pushed cleanly.
+
+                            // Let's keep the navigate for explicit stack management.
+                            // This pops the current AuthScreen instance and pushes a new AUTH_FLOW
+                            // which then immediately resolves to ProfileScreen.
+                            navController.navigate(Routes.AUTH_FlOW) {
+                                popUpTo(Routes.AUTH_FlOW) { inclusive = true } // Replace AuthScreen with ProfileScreen
+                                launchSingleTop = true
+                            }
+                        }
+                    )
                 }
             }
-
-            Box {
-                Text("Redirecting...")
-            }
         }
 
-        composable(Routes.AUTH) {
-            MainScaffold(navController = navController) { innerPadding ->
-                AuthScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onLoginSuccess = {
-                        navController.popBackStack()
-                        navController.navigate(Routes.PROFILE_ENTRY)
-                    }
-                )
-            }
-        }
-
-        composable(Routes.PROFILE) {
-            MainScaffold(navController = navController) { innerPadding ->
-                ProfileScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    navController = navController,
-                    isAuthenticated = isAuthenticated
-                )
-            }
-        }
+        // REMOVE THIS COMPOSABLE:
+        // composable(Routes.PROFILE) {
+        //     MainScaffold(navController = navController) { innerPadding ->
+        //         ProfileScreen(
+        //             modifier = Modifier.padding(innerPadding),
+        //             navController = navController
+        //         )
+        //     }
+        // }
     }
 }
