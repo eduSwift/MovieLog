@@ -1,6 +1,5 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -11,12 +10,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AuthScreen(
     modifier: Modifier = Modifier,
-    authViewModel: AuthViewModel = koinViewModel(),
+    authViewModel: AuthViewModel = viewModel(),
     onLoginSuccess: () -> Unit
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
@@ -29,28 +27,11 @@ fun AuthScreen(
     var isLoginMode by remember { mutableStateOf(true) }
     var showSuccessMessage by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            Log.d("AuthScreen", "isAuthenticated is now true. Navigating away.")
-            onLoginSuccess() // Signal to MainNavigation to navigate to ProfileScreen
+    LaunchedEffect(isAuthenticated, wasJustRegistered) {
+        if (isAuthenticated && !wasJustRegistered) {
+            onLoginSuccess()
         }
     }
-
-    // Reset error message when switching modes
-    LaunchedEffect(isLoginMode) {
-        authViewModel.setError(null)
-        showSuccessMessage = false // Clear success message on mode switch
-    }
-
-    // When wasJustRegistered changes, if it's true, show the success message
-    LaunchedEffect(wasJustRegistered) {
-        if (wasJustRegistered) {
-            showSuccessMessage = true
-            // Important: Clear the flag after processing, so it doesn't trigger repeatedly
-            authViewModel.clearWasJustRegisteredFlag() // You'll need to add this to AuthViewModel
-        }
-    }
-
 
     Column(
         modifier = modifier

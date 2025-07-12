@@ -14,7 +14,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewMo
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -45,8 +45,7 @@ val appModule = module {
             androidContext(),
             AppDatabase::class.java,
             "movie_app_database"
-        ).fallbackToDestructiveMigration()
-            .build()
+        ).build()
     }
 
     single<UserDao> { get<AppDatabase>().userDao() }
@@ -55,9 +54,9 @@ val appModule = module {
     single { UserRepository(get()) }
     single { MovieRepository(api = get(), movieDao = get()) }
 
-    viewModel { HomeScreenViewModel(get()) }
-    viewModel { SearchScreenViewModel(get()) }
-    viewModel { AuthViewModel(get()) }
-    viewModel { MovieViewModel(get()) }
+    viewModelOf(::HomeScreenViewModel)
+    viewModelOf(::SearchScreenViewModel)
+    viewModelOf(::AuthViewModel)
+    viewModelOf(::MovieViewModel)
 
 }
