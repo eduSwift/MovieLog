@@ -43,7 +43,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
@@ -55,11 +54,12 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun MovieDetailScreen(
     navController: NavController,
+    movieId: Int, // This is the TMDB movie ID coming from navigation
     posterPath: String?,
     title: String?,
     overview: String?,
     releaseDate: String?,
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = koinViewModel(),
     movieViewModel: MovieViewModel = koinViewModel()
 ) {
     val backgroundColor = Color(0xFFB3D7EA)
@@ -87,8 +87,10 @@ fun MovieDetailScreen(
         visible = true
     }
 
+    // *** FIX APPLIED HERE: Correctly creating MovieEntity ***
     val movieEntity = MovieEntity(
-        id = posterPath.hashCode(), // Replace with a real movie ID if available
+        id = 0, // Set to 0 to let Room autogenerate the primary key for new inserts
+        tmdbMovieId = movieId, // Pass the 'movieId' received from navigation to 'tmdbMovieId'
         userId = userId ?: "",
         title = title ?: "",
         posterPath = posterPath ?: "",
@@ -182,6 +184,7 @@ fun MovieDetailScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Want to Watch Button
                 OutlinedButton(onClick = {
                     if (isAuthenticated && userId != null) {
                         movieViewModel.toggleFlag(userId!!, movieEntity, "wantToWatch")
@@ -193,10 +196,11 @@ fun MovieDetailScreen(
                     Text("Want to Watch")
                 }
 
+                // Watched Button
                 OutlinedButton(onClick = {
                     if (isAuthenticated && userId != null) {
                         movieViewModel.toggleFlag(userId!!, movieEntity, "watched")
-                        Toast.makeText(context, "Marked as Watched", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Added to Watched", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
@@ -204,17 +208,19 @@ fun MovieDetailScreen(
                     Text("Watched")
                 }
 
+                // Favorite Button
                 IconButton(onClick = {
                     if (isAuthenticated && userId != null) {
                         movieViewModel.toggleFlag(userId!!, movieEntity, "favorite")
-                        Toast.makeText(context, "Added to Favorites", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Toggled Favorite", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Please log in first to use this feature", Toast.LENGTH_SHORT).show()
                     }
                 }) {
                     Icon(
-                        imageVector = Icons.Default.FavoriteBorder,
-                        contentDescription = "Add to Favorites"
+                        imageVector = Icons.Default.FavoriteBorder, // Consider using filled/bordered based on state
+                        contentDescription = "Add to Favorites",
+                        tint = Color.Red // You might want to change color based on `isFavorite` state from MovieEntity
                     )
                 }
             }

@@ -32,7 +32,7 @@ fun HomeScreen(
     isAuthenticated: Boolean,
     onMovieClick: (Movie) -> Unit,
     onSearchClick: () -> Unit,
-    onProfileClick: (Boolean) -> Unit
+    onProfileClick: () -> Unit // Changed from (Boolean) -> Unit to () -> Unit
 ) {
     val moviesByCategory = viewModel.moviesByCategory.collectAsState()
     val backgroundColor = Color(0xFFB3D7EA)
@@ -76,6 +76,6 @@ fun HomeScreen(
         }
     }
 
-    // ✅ Somewhere in your UI, call:
-    // onProfileClick(isAuthenticated)
+    // Remove the comment block if you intend to use onProfileClick here
+    // Currently, it's used in MainScaffold's bottom bar or top bar.
 }

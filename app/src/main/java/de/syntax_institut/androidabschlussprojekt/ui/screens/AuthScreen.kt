@@ -1,5 +1,6 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,29 +9,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
+import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AuthScreen(
     modifier: Modifier = Modifier,
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = koinViewModel(),
     onLoginSuccess: () -> Unit
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
     val wasJustRegistered by authViewModel.wasJustRegistered.collectAsState()
+    val showRegistrationSuccessMessage by authViewModel.showRegistrationSuccess.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
     var isLoginMode by remember { mutableStateOf(true) }
-    var showSuccessMessage by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isAuthenticated, wasJustRegistered) {
-        if (isAuthenticated && !wasJustRegistered) {
+    // ✅ Navigate on successful login
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
             onLoginSuccess()
         }
+    }
+
+    // ✅ Show success message after registration
+    LaunchedEffect(wasJustRegistered) {
+        if (wasJustRegistered) {
+            Log.d("AuthScreen", "wasJustRegistered detected. Showing success message.")
+            authViewModel.setShowRegistrationSuccess(true)
+            isLoginMode = true
+            email = ""
+            password = ""
+            repeatPassword = ""
+            authViewModel.clearWasJustRegisteredFlag()
+            authViewModel.setError(null)
+        }
+    }
+
+    // ✅ Auto-hide the success message after 3 seconds
+    LaunchedEffect(showRegistrationSuccessMessage) {
+        if (showRegistrationSuccessMessage) {
+            delay(3000)
+            authViewModel.clearRegistrationSuccessMessage()
+        }
+    }
+
+    // ✅ Clear error when switching modes
+    LaunchedEffect(isLoginMode) {
+        authViewModel.setError(null)
     }
 
     Column(
@@ -74,22 +104,26 @@ fun AuthScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ✅ Show registration success message above the login button only in login mode
+        if (isLoginMode && showRegistrationSuccessMessage) {
+            Text(
+                text = "Your account was created successfully! Please sign in.",
+                color = Color(0xFF2E7D32),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
         Button(
             onClick = {
                 if (isLoginMode) {
                     authViewModel.login(email, password)
-                    showSuccessMessage = false
                 } else {
                     if (password != repeatPassword) {
                         authViewModel.setError("Passwords do not match")
                         return@Button
                     }
                     authViewModel.register(email, password)
-                    showSuccessMessage = true
-                    email = ""
-                    password = ""
-                    repeatPassword = ""
-                    isLoginMode = true
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -100,8 +134,10 @@ fun AuthScreen(
         TextButton(
             onClick = {
                 isLoginMode = !isLoginMode
-                showSuccessMessage = false
                 authViewModel.setError(null)
+                email = ""
+                password = ""
+                repeatPassword = ""
             }
         ) {
             Text(
@@ -112,13 +148,6 @@ fun AuthScreen(
         errorMessage?.let {
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = it, color = MaterialTheme.colorScheme.error)
-        }
-
-        if (showSuccessMessage && wasJustRegistered) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Your account was created successfully! Please sign in."
-            )
         }
     }
 }

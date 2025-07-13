@@ -14,7 +14,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewMo
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -25,7 +25,7 @@ val appModule = module {
 
     single {
         Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
+            .addLast(KotlinJsonAdapterFactory())
             .build()
     }
 
@@ -44,8 +44,9 @@ val appModule = module {
         Room.databaseBuilder(
             androidContext(),
             AppDatabase::class.java,
-            "movie_app_database"
-        ).build()
+            "app_master_database"
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     single<UserDao> { get<AppDatabase>().userDao() }
@@ -54,9 +55,9 @@ val appModule = module {
     single { UserRepository(get()) }
     single { MovieRepository(api = get(), movieDao = get()) }
 
-    viewModelOf(::HomeScreenViewModel)
-    viewModelOf(::SearchScreenViewModel)
-    viewModelOf(::AuthViewModel)
-    viewModelOf(::MovieViewModel)
+    viewModel { HomeScreenViewModel(get()) }
+    viewModel { SearchScreenViewModel(get()) }
+    viewModel { AuthViewModel(get()) }
+    viewModel { MovieViewModel(get()) }
 
 }

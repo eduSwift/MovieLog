@@ -1,11 +1,13 @@
 package de.syntax_institut.androidabschlussprojekt.data.repository
 
+// This is the correct and necessary import for BuildConfig
 import de.syntax_institut.androidabschlussprojekt.BuildConfig
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
+import kotlinx.coroutines.flow.Flow
 
 class MovieRepository(
     private val api: APIService,
@@ -29,19 +31,32 @@ class MovieRepository(
         movieDao.insertMovie(movie)
     }
 
-    suspend fun getUserMovies(userId: String): List<MovieEntity> {
+    suspend fun deleteMovie(movie: MovieEntity) {
+        movieDao.deleteMovie(movie)
+    }
+
+    // Using tmdbMovieId as established in previous fixes
+    suspend fun getMovieByIdAndUserId(tmdbMovieId: Int, userId: String): MovieEntity? {
+        return movieDao.getMovieByIdAndUserId(tmdbMovieId, userId)
+    }
+
+    fun getUserMovies(userId: String): Flow<List<MovieEntity>> {
         return movieDao.getMoviesForUser(userId)
     }
 
-    suspend fun getFavorites(userId: String): List<MovieEntity> {
-        return movieDao.getFavorites(userId)
+    fun getFavoritesForUser(userId: String): Flow<List<MovieEntity>> {
+        return movieDao.getFavoriteMovies(userId)
     }
 
-    suspend fun getWantToWatch(userId: String): List<MovieEntity> {
-        return movieDao.getWantToWatch(userId)
+    fun getWantToWatchForUser(userId: String): Flow<List<MovieEntity>> {
+        return movieDao.getWantToWatchMovies(userId)
     }
 
-    suspend fun getWatched(userId: String): List<MovieEntity> {
-        return movieDao.getWatched(userId)
+    fun getWatchedForUser(userId: String): Flow<List<MovieEntity>> {
+        return movieDao.getWatchedMovies(userId)
+    }
+
+    suspend fun deleteAllMoviesByUserId(userId: String) {
+        movieDao.deleteAllMoviesByUserId(userId)
     }
 }

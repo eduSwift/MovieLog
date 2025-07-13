@@ -1,4 +1,3 @@
-
 import org.gradle.kotlin.dsl.implementation
 import java.io.FileInputStream
 import java.util.Properties
@@ -31,7 +30,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
 
@@ -70,13 +68,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+
+
     implementation(platform(libs.androidx.compose.bom))
+
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.navigation.compose.android)
-    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.navigation.compose.android) // This looks like a duplicate or old one, check if navigation.compose is enough below
+    implementation(libs.androidx.constraintlayout) // This seems to be the old library, consider using constraintlayout-compose if you mean for Compose
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -94,15 +96,23 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.navigation.compose)
+
     implementation(libs.kotlinx.serialization)
     implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+
+
+    implementation("androidx.compose.material3:material3:1.2.1")
+
+
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha10")
+
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.1") 
 
 }
 
