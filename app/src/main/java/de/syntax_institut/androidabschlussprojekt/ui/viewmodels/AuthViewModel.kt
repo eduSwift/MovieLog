@@ -1,18 +1,23 @@
 package de.syntax_institut.androidabschlussprojekt.ui.viewmodels
 
-import android.util.Log
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
 import de.syntax_institut.androidabschlussprojekt.data.database.UserEntity
 import de.syntax_institut.androidabschlussprojekt.ui.state.UiState
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+
 
 class AuthViewModel(
     private val userDao: UserDao
@@ -193,5 +198,28 @@ class AuthViewModel(
 
     fun setError(message: String?) {
         _errorMessage.value = message
+    }
+
+
+    fun uploadProfileImage(uid: String, imageUri: Uri) {
+        val storageRef = FirebaseStorage.getInstance().reference
+            .child("profileImages/$uid/${UUID.randomUUID()}.jpg")
+
+        viewModelScope.launch {
+            try {
+                storageRef.putFile(imageUri).addOnSuccessListener {
+                    storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                        viewModelScope.launch {
+                            userDao.updateProfileImageUrl(uid, downloadUrl.toString())
+                            loadUserData(uid) // refresh
+                        }
+                    }
+                }.addOnFailureListener {
+                    _errorMessage.value = "Image upload failed: ${it.localizedMessage}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Image upload failed: ${e.localizedMessage}"
+            }
+        }
     }
 }

@@ -106,7 +106,8 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.2.1")
 
-
+    implementation("androidx.activity:activity-ktx:1.7.2") // already present in Compose projects
+    implementation("com.google.firebase:firebase-storage-ktx")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha10")
 
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
