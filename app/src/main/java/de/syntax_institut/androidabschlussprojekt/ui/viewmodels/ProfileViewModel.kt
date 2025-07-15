@@ -11,9 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-class ProfileScreenViewModel(
+class ProfileViewModel(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
@@ -51,19 +52,18 @@ class ProfileScreenViewModel(
         val storageRef = FirebaseStorage.getInstance().reference
             .child("profileImages/$uid/${UUID.randomUUID()}.jpg")
 
-        storageRef.putFile(imageUri).addOnSuccessListener {
-            storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                viewModelScope.launch {
-                    try {
-                        userRepository.updateProfileImageUrl(uid, downloadUrl.toString())
-                        loadUserData(uid)
-                    } catch (e: Exception) {
-                        _userState.value = UiState.Error("Failed to update profile image: ${e.localizedMessage}")
-                    }
-                }
+        viewModelScope.launch {
+            try {
+                val uploadTask = storageRef.putFile(imageUri).await()
+                val downloadUrl = storageRef.downloadUrl.await()
+
+                userRepository.updateProfileImageUrl(uid, downloadUrl.toString())
+
+                loadUserData(uid)
+
+            } catch (e: Exception) {
+                _userState.value = UiState.Error("Failed to update profile image: ${e.localizedMessage}")
             }
-        }.addOnFailureListener {
-            _userState.value = UiState.Error("Image upload failed: ${it.localizedMessage}")
         }
     }
 

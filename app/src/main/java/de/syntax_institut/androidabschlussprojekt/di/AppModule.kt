@@ -13,7 +13,7 @@ import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
-import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileScreenViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -63,7 +63,7 @@ val appModule = module {
     viewModel { SearchScreenViewModel(get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { MovieViewModel(get()) }
-    viewModel { ProfileScreenViewModel(get()) }
+    viewModel { ProfileViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
 
 }

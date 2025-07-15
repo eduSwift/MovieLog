@@ -1,15 +1,10 @@
 package de.syntax_institut.androidabschlussprojekt.navigation
 
 import android.util.Log
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -21,6 +16,7 @@ import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.ui.components.MainScaffold
 import de.syntax_institut.androidabschlussprojekt.ui.screens.*
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -33,7 +29,7 @@ fun MainNavigation(
     settingsViewModel: SettingsViewModel
 ) {
     val authViewModel: AuthViewModel = koinViewModel()
-    val settingsViewModel: SettingsViewModel = koinViewModel()
+    val profileViewModel: ProfileViewModel = koinViewModel()
 
     val didLogout by authViewModel.didLogout.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
@@ -41,7 +37,6 @@ fun MainNavigation(
 
     LaunchedEffect(didLogout) {
         if (didLogout) {
-            Log.d("MainNavigation", "Logout detected. Navigating to AUTH_FLOW.")
             navController.navigate(Routes.AUTH) {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 launchSingleTop = true
@@ -114,7 +109,10 @@ fun MainNavigation(
 
             composable(Routes.AUTH) {
                 MainScaffold(navController = navController) { innerPadding ->
-                    if (isAuthenticated) {
+
+                    val justSignedUp by authViewModel.justSignedUp.collectAsState()
+
+                    if (isAuthenticated && !justSignedUp) {
                         ProfileScreen(
                             modifier = Modifier.padding(innerPadding),
                             navController = navController,
@@ -125,6 +123,7 @@ fun MainNavigation(
                             modifier = Modifier.padding(innerPadding),
                             authViewModel = authViewModel,
                             onLoginSuccess = {
+                                authViewModel.clearSignUpFlag()
                                 navController.navigate(Routes.HOME) {
                                     popUpTo(Routes.AUTH) { inclusive = true }
                                     launchSingleTop = true
@@ -142,10 +141,10 @@ fun MainNavigation(
                     onToggleDarkMode = onToggleDarkMode,
                     settingsViewModel = settingsViewModel,
                     onEditNickname = {},
-                    onChangeProfilePicture = {},
                     onChangePassword = {},
                     onDeleteAccount = {},
-                    onLogout = { authViewModel.signOut() }
+                    onLogout = { authViewModel.signOut()
+                    }
                 )
             }
         }

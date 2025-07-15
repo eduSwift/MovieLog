@@ -28,6 +28,9 @@ class AuthViewModel(
     private val _didLogout = MutableStateFlow(false)
     val didLogout: StateFlow<Boolean> = _didLogout.asStateFlow()
 
+    private val _justSignedUp = MutableStateFlow(false)
+    val justSignedUp: StateFlow<Boolean> = _justSignedUp.asStateFlow()
+
     init {
         checkCurrentUser()
     }
@@ -53,6 +56,7 @@ class AuthViewModel(
                     userRepository.insertUser(newUser)
                     _isAuthenticated.value = true
                     _currentUserId.value = uid
+                    _justSignedUp.value = true
                     onSuccess()
                 }
             }
@@ -74,6 +78,30 @@ class AuthViewModel(
             }
     }
 
+
+    fun sendPasswordResetEmail(email: String, onComplete: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val firebaseUser = firebaseAuth.currentUser
+            if (firebaseUser != null) {
+                val userEmail = firebaseUser.email
+                if (!userEmail.isNullOrEmpty()) {
+                    firebaseAuth.sendPasswordResetEmail(userEmail)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                onComplete(true, null)
+                            } else {
+                                onComplete(false, task.exception?.message)
+                            }
+                        }
+                } else {
+                    onComplete(false, "No email associated with this user.")
+                }
+            } else {
+                onComplete(false, "User is not logged in.")
+            }
+        }
+    }
+
     fun signOut() {
         firebaseAuth.signOut()
         _isAuthenticated.value = false
@@ -83,5 +111,9 @@ class AuthViewModel(
 
     fun clearLogoutFlag() {
         _didLogout.value = false
+    }
+
+    fun clearSignUpFlag() {
+        _justSignedUp.value = false
     }
 }

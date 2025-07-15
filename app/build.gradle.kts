@@ -76,9 +76,8 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.navigation.compose.android) // This looks like a duplicate or old one, check if navigation.compose is enough below
-    implementation(libs.androidx.constraintlayout) // This seems to be the old library, consider using constraintlayout-compose if you mean for Compose
-
+    implementation(libs.androidx.navigation.compose.android)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -106,12 +105,12 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.2.1")
 
-    implementation("androidx.activity:activity-ktx:1.7.2") // already present in Compose projects
-    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("androidx.activity:activity-ktx:1.7.2")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha10")
 
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
