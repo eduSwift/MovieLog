@@ -19,25 +19,26 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.ui.components.MainScaffold
-import de.syntax_institut.androidabschlussprojekt.ui.screens.AuthScreen
-import de.syntax_institut.androidabschlussprojekt.ui.screens.HomeScreen
-import de.syntax_institut.androidabschlussprojekt.ui.screens.MovieDetailScreen
-import de.syntax_institut.androidabschlussprojekt.ui.screens.ProfileScreen
-import de.syntax_institut.androidabschlussprojekt.ui.screens.SearchScreen
+import de.syntax_institut.androidabschlussprojekt.ui.screens.*
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MainNavigation(
     navController: NavHostController,
-    onNavigateToMovieDetail: (Movie) -> Unit
+    onNavigateToMovieDetail: (Movie) -> Unit,
+    isDarkModeEnabled: Boolean,
+    onToggleDarkMode: (Boolean) -> Unit,
+    settingsViewModel: SettingsViewModel
 ) {
     val authViewModel: AuthViewModel = koinViewModel()
+    val settingsViewModel: SettingsViewModel = koinViewModel()
+
     val didLogout by authViewModel.didLogout.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val authReady by authViewModel.authReady.collectAsState()
 
-    // Handle logout
     LaunchedEffect(didLogout) {
         if (didLogout) {
             Log.d("MainNavigation", "Logout detected. Navigating to AUTH_FLOW.")
@@ -49,19 +50,15 @@ fun MainNavigation(
         }
     }
 
-    // Wait for Firebase auth state
     if (!authReady) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
             Text("Loading...")
         }
     } else {
-        // Always start at Home
-        val initialStartDestination = Routes.HOME
-
         NavHost(
             navController = navController,
-            startDestination = initialStartDestination
+            startDestination = Routes.HOME
         ) {
             composable(Routes.HOME) {
                 MainScaffold(navController = navController) { innerPadding ->
@@ -69,9 +66,7 @@ fun MainNavigation(
                         modifier = Modifier.padding(innerPadding),
                         onMovieClick = onNavigateToMovieDetail,
                         isAuthenticated = isAuthenticated,
-                        onProfileClick = {
-                            navController.navigate(Routes.AUTH)
-                        },
+                        onProfileClick = { navController.navigate(Routes.AUTH) },
                         onSearchClick = { navController.navigate(Routes.SEARCH) }
                     )
                 }
@@ -119,21 +114,17 @@ fun MainNavigation(
 
             composable(Routes.AUTH) {
                 MainScaffold(navController = navController) { innerPadding ->
-                    Log.d("MainNavigation", "AUTH_FLOW composable, isAuthenticated: $isAuthenticated")
                     if (isAuthenticated) {
-                        Log.d("MainNavigation", "Authenticated: Displaying ProfileScreen.")
                         ProfileScreen(
                             modifier = Modifier.padding(innerPadding),
                             navController = navController,
                             authViewModel = authViewModel
                         )
                     } else {
-                        Log.d("MainNavigation", "Not authenticated: Displaying AuthScreen.")
                         AuthScreen(
                             modifier = Modifier.padding(innerPadding),
                             authViewModel = authViewModel,
                             onLoginSuccess = {
-                                Log.d("MainNavigation", "AuthScreen onLoginSuccess called. Navigating to HOME.")
                                 navController.navigate(Routes.HOME) {
                                     popUpTo(Routes.AUTH) { inclusive = true }
                                     launchSingleTop = true
@@ -142,6 +133,20 @@ fun MainNavigation(
                         )
                     }
                 }
+            }
+
+            composable(Routes.SETTINGS) {
+                SettingsScreen(
+                    navController = navController,
+                    isDarkModeEnabled = isDarkModeEnabled,
+                    onToggleDarkMode = onToggleDarkMode,
+                    settingsViewModel = settingsViewModel,
+                    onEditNickname = {},
+                    onChangeProfilePicture = {},
+                    onChangePassword = {},
+                    onDeleteAccount = {},
+                    onLogout = { authViewModel.signOut() }
+                )
             }
         }
     }

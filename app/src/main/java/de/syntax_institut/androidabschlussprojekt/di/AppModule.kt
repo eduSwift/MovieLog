@@ -7,6 +7,7 @@ import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.database.AppDatabase
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
 import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
+import de.syntax_institut.androidabschlussprojekt.data.datastore.ThemePreferences
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
 import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
@@ -14,6 +15,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewMo
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -55,11 +57,13 @@ val appModule = module {
 
     single { UserRepository(get()) }
     single { MovieRepository(api = get(), movieDao = get()) }
+    single { ThemePreferences (get()) }
 
     viewModel { HomeScreenViewModel(get()) }
     viewModel { SearchScreenViewModel(get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { MovieViewModel(get()) }
     viewModel { ProfileScreenViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
 
 }

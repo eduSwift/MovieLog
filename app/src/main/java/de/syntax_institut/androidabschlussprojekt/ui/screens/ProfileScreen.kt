@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
+import de.syntax_institut.androidabschlussprojekt.navigation.Routes
 import de.syntax_institut.androidabschlussprojekt.ui.state.UiState
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
@@ -87,8 +88,14 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            IconButton(onClick = { /* Navigate to Settings later */ }) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            IconButton(onClick = {
+                navController.navigate(Routes.SETTINGS)
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
             }
         }
 
