@@ -1,6 +1,6 @@
 package de.syntax_institut.androidabschlussprojekt.data.repository
 
-// This is the correct and necessary import for BuildConfig
+
 import de.syntax_institut.androidabschlussprojekt.BuildConfig
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
@@ -35,7 +35,7 @@ class MovieRepository(
         movieDao.deleteMovie(movie)
     }
 
-    // Using tmdbMovieId as established in previous fixes
+
     suspend fun getMovieByIdAndUserId(tmdbMovieId: Int, userId: String): MovieEntity? {
         return movieDao.getMovieByIdAndUserId(tmdbMovieId, userId)
     }

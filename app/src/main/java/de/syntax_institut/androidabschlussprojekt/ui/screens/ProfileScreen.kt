@@ -94,7 +94,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Profile Image (Centered)
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
@@ -120,7 +119,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Nickname
         when (userState) {
             is UiState.Success -> {
                 val user = (userState as UiState.Success).data
@@ -147,7 +145,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Sections
         MovieListSection("Favorites", favorites, currentUserId, movieViewModel)
         MovieListSection("Watched", watched, currentUserId, movieViewModel)
         MovieListSection("Want to Watch", wantToWatch, currentUserId, movieViewModel)

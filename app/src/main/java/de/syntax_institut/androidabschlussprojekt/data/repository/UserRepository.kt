@@ -11,4 +11,16 @@ class UserRepository(private val userDao: UserDao) {
     suspend fun getUser(uid: String): UserEntity? {
         return userDao.getUserById(uid)
     }
+
+    suspend fun updateNickname(uid: String, nickname: String) {
+        userDao.updateNickname(uid, nickname)
+    }
+
+    suspend fun updateProfileImageUrl(uid: String, url: String) {
+        userDao.updateProfileImageUrl(uid, url)
+    }
+
+    suspend fun deleteUser(uid: String) {
+        userDao.deleteUser(uid)
+    }
 }

@@ -4,8 +4,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.storage.FirebaseStorage
-import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
 import de.syntax_institut.androidabschlussprojekt.data.database.UserEntity
+import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.state.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class ProfileScreenViewModel(
-    private val userDao: UserDao
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _userState = MutableStateFlow<UiState<UserEntity>>(UiState.Loading)
@@ -24,7 +24,7 @@ class ProfileScreenViewModel(
         viewModelScope.launch {
             _userState.value = UiState.Loading
             try {
-                val user = userDao.getUserById(uid)
+                val user = userRepository.getUser(uid)
                 if (user != null) {
                     _userState.value = UiState.Success(user)
                 } else {
@@ -39,7 +39,7 @@ class ProfileScreenViewModel(
     fun updateNickname(uid: String, newNickname: String) {
         viewModelScope.launch {
             try {
-                userDao.updateNickname(uid, newNickname)
+                userRepository.updateNickname(uid, newNickname)
                 loadUserData(uid)
             } catch (e: Exception) {
                 _userState.value = UiState.Error("Failed to update nickname: ${e.localizedMessage}")
@@ -51,21 +51,19 @@ class ProfileScreenViewModel(
         val storageRef = FirebaseStorage.getInstance().reference
             .child("profileImages/$uid/${UUID.randomUUID()}.jpg")
 
-        viewModelScope.launch {
-            try {
-                storageRef.putFile(imageUri).addOnSuccessListener {
-                    storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                        viewModelScope.launch {
-                            userDao.updateProfileImageUrl(uid, downloadUrl.toString())
-                            loadUserData(uid)
-                        }
+        storageRef.putFile(imageUri).addOnSuccessListener {
+            storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                viewModelScope.launch {
+                    try {
+                        userRepository.updateProfileImageUrl(uid, downloadUrl.toString())
+                        loadUserData(uid)
+                    } catch (e: Exception) {
+                        _userState.value = UiState.Error("Failed to update profile image: ${e.localizedMessage}")
                     }
-                }.addOnFailureListener {
-                    _userState.value = UiState.Error("Image upload failed: ${it.localizedMessage}")
                 }
-            } catch (e: Exception) {
-                _userState.value = UiState.Error("Image upload failed: ${e.localizedMessage}")
             }
+        }.addOnFailureListener {
+            _userState.value = UiState.Error("Image upload failed: ${it.localizedMessage}")
         }
     }
 

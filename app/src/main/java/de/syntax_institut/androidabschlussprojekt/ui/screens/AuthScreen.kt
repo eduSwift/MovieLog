@@ -1,153 +1,144 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
-import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
-import kotlinx.coroutines.delay
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AuthScreen(
     modifier: Modifier = Modifier,
-    authViewModel: AuthViewModel = koinViewModel(),
+    authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit
 ) {
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-    val errorMessage by authViewModel.errorMessage.collectAsState()
-    val wasJustRegistered by authViewModel.wasJustRegistered.collectAsState()
-    val showRegistrationSuccessMessage by authViewModel.showRegistrationSuccess.collectAsState()
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var repeatPassword by remember { mutableStateOf("") }
     var isLoginMode by remember { mutableStateOf(true) }
-
-    // ✅ Navigate on successful login
-    LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            onLoginSuccess()
-        }
-    }
-
-    // ✅ Show success message after registration
-    LaunchedEffect(wasJustRegistered) {
-        if (wasJustRegistered) {
-            Log.d("AuthScreen", "wasJustRegistered detected. Showing success message.")
-            authViewModel.setShowRegistrationSuccess(true)
-            isLoginMode = true
-            email = ""
-            password = ""
-            repeatPassword = ""
-            authViewModel.clearWasJustRegisteredFlag()
-            authViewModel.setError(null)
-        }
-    }
-
-    // ✅ Auto-hide the success message after 3 seconds
-    LaunchedEffect(showRegistrationSuccessMessage) {
-        if (showRegistrationSuccessMessage) {
-            delay(3000)
-            authViewModel.clearRegistrationSuccessMessage()
-        }
-    }
-
-    // ✅ Clear error when switching modes
-    LaunchedEffect(isLoginMode) {
-        authViewModel.setError(null)
-    }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFB3D7EA))
-            .padding(32.dp),
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (isLoginMode) "Sign In" else "Sign Up",
-            style = MaterialTheme.typography.headlineMedium
+            text = if (isLoginMode) "Login" else "Sign Up",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+            modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password)
         )
-
-        if (!isLoginMode) {
-            OutlinedTextField(
-                value = repeatPassword,
-                onValueChange = { repeatPassword = it },
-                label = { Text("Repeat Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ✅ Show registration success message above the login button only in login mode
-        if (isLoginMode && showRegistrationSuccessMessage) {
-            Text(
-                text = "Your account was created successfully! Please sign in.",
-                color = Color(0xFF2E7D32),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-
         Button(
             onClick = {
+                isLoading = true
+                errorMessage = null
+
                 if (isLoginMode) {
-                    authViewModel.login(email, password)
+                    authViewModel.signIn(
+                        email = email,
+                        password = password,
+                        onSuccess = {
+                            isLoading = false
+                            onLoginSuccess()
+                        },
+                        onError = {
+                            isLoading = false
+                            errorMessage = it
+                        }
+                    )
                 } else {
-                    if (password != repeatPassword) {
-                        authViewModel.setError("Passwords do not match")
-                        return@Button
-                    }
-                    authViewModel.register(email, password)
+                    authViewModel.signUp(
+                        email = email,
+                        password = password,
+                        onSuccess = {
+                            isLoading = false
+                            onLoginSuccess()
+                        },
+                        onError = {
+                            isLoading = false
+                            errorMessage = it
+                        }
+                    )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = email.isNotBlank() && password.isNotBlank() && !isLoading
         ) {
-            Text(text = if (isLoginMode) "Login" else "Sign Up")
+            Text(if (isLoginMode) "Login" else "Sign Up")
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         TextButton(
             onClick = {
                 isLoginMode = !isLoginMode
-                authViewModel.setError(null)
-                email = ""
-                password = ""
-                repeatPassword = ""
-            }
+                errorMessage = null
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
+            Text(if (isLoginMode) "No account? Sign up" else "Already have an account? Log in")
+        }
+
+        if (errorMessage != null) {
             Text(
-                text = if (isLoginMode) "Need an account? Sign up" else "Already have an account? Log in"
+                text = errorMessage ?: "",
+                color = Color.Red,
+                modifier = Modifier.padding(top = 12.dp)
             )
         }
 
-        errorMessage?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = it, color = MaterialTheme.colorScheme.error)
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }

@@ -1,225 +1,87 @@
 package de.syntax_institut.androidabschlussprojekt.ui.viewmodels
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.storage.FirebaseStorage
-import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
 import de.syntax_institut.androidabschlussprojekt.data.database.UserEntity
-import de.syntax_institut.androidabschlussprojekt.ui.state.UiState
+import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.UUID
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-
 
 class AuthViewModel(
-    private val userDao: UserDao
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val auth = FirebaseAuth.getInstance()
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    private val _userState: MutableStateFlow<UiState<UserEntity>> =
-        MutableStateFlow(UiState.Loading)
-    val userState: StateFlow<UiState<UserEntity>> = _userState.asStateFlow()
-
-    private val _isAuthenticated = MutableStateFlow(auth.currentUser != null)
+    private val _isAuthenticated = MutableStateFlow(false)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
+
+    private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
 
     private val _authReady = MutableStateFlow(false)
     val authReady: StateFlow<Boolean> = _authReady.asStateFlow()
 
-    private val _currentUserId = MutableStateFlow(auth.currentUser?.uid)
-    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
-
     private val _didLogout = MutableStateFlow(false)
     val didLogout: StateFlow<Boolean> = _didLogout.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    private val _wasJustRegistered = MutableStateFlow(false)
-    val wasJustRegistered: StateFlow<Boolean> = _wasJustRegistered.asStateFlow()
-
-    private val _showRegistrationSuccess = MutableStateFlow(false)
-    val showRegistrationSuccess: StateFlow<Boolean> = _showRegistrationSuccess.asStateFlow()
-
     init {
-        auth.addAuthStateListener { firebaseAuth ->
-            val user = firebaseAuth.currentUser
-            _isAuthenticated.value = user != null
-            _currentUserId.value = user?.uid
-
-            if (user != null) {
-                loadUserData(user.uid)
-            } else {
-                _userState.value = UiState.Loading
-            }
-
-            _authReady.value = true
-        }
+        checkCurrentUser()
     }
 
-    fun loadUserData(uid: String) {
-        viewModelScope.launch {
-            _userState.value = UiState.Loading
-            try {
-                val user = userDao.getUserById(uid)
-
-                if (user != null) {
-                    _userState.value = UiState.Success(user)
-                } else {
-                    val firebaseUser = auth.currentUser
-                    if (firebaseUser != null && firebaseUser.uid == uid && firebaseUser.email != null) {
-                        val newUser = UserEntity(
-                            uid = uid,
-                            email = firebaseUser.email!!,
-                            nickname = "User_${uid.take(6)}",
-                            profileImageUrl = "https://via.placeholder.com/150"
-                        )
-                        userDao.insertUser(newUser)
-                        _userState.value = UiState.Success(newUser)
-                    } else {
-                        _userState.value = UiState.Error("No Firebase user data available.")
-                    }
-                }
-            } catch (e: Exception) {
-                _userState.value = UiState.Error("Error loading user: ${e.localizedMessage}")
-            }
-        }
+    private fun checkCurrentUser() {
+        val user = firebaseAuth.currentUser
+        _isAuthenticated.value = user != null
+        _currentUserId.value = user?.uid
+        _authReady.value = true
     }
 
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            _errorMessage.value = null
-            try {
-                suspendCancellableCoroutine<AuthResult> { continuation ->
-                    auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                task.result?.let { continuation.resume(it) }
-                                    ?: continuation.resumeWithException(Exception("Login failed"))
-                            } else {
-                                continuation.resumeWithException(task.exception ?: Exception("Login failed"))
-                            }
-                        }
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Login failed"
-                _userState.value = UiState.Error("Login error: ${e.localizedMessage}")
-            }
-        }
-    }
-
-    fun register(email: String, password: String) {
-        viewModelScope.launch {
-            _errorMessage.value = null
-            _wasJustRegistered.value = true
-            _showRegistrationSuccess.value = true
-
-            try {
-                val authResult = suspendCancellableCoroutine<AuthResult> { continuation ->
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                task.result?.let { continuation.resume(it) }
-                                    ?: continuation.resumeWithException(Exception("Registration failed"))
-                            } else {
-                                continuation.resumeWithException(task.exception ?: Exception("Registration failed"))
-                            }
-                        }
-                }
-
-                val firebaseUser = authResult.user
-                if (firebaseUser != null && firebaseUser.email != null) {
+    fun signUp(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result ->
+                val uid = result.user?.uid ?: return@addOnSuccessListener
+                viewModelScope.launch {
                     val newUser = UserEntity(
-                        uid = firebaseUser.uid,
-                        email = firebaseUser.email!!,
-                        nickname = "User_${firebaseUser.uid.take(6)}",
-                        profileImageUrl = "https://via.placeholder.com/150"
+                        uid = uid,
+                        email = email,
+                        nickname = "User_$uid",
+                        profileImageUrl = ""
                     )
-                    userDao.insertUser(newUser)
-                    auth.signOut()
+                    userRepository.insertUser(newUser)
+                    _isAuthenticated.value = true
+                    _currentUserId.value = uid
+                    onSuccess()
                 }
-
-            } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Registration failed"
-                _userState.value = UiState.Error("Registration error: ${e.localizedMessage}")
             }
-        }
+            .addOnFailureListener { exception ->
+                onError(exception.message ?: "Registration failed")
+            }
     }
 
-    fun logout() {
-        auth.signOut()
-        _didLogout.value = true
-        _userState.value = UiState.Loading
+    fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener {
+                val uid = it.user?.uid
+                _isAuthenticated.value = uid != null
+                _currentUserId.value = uid
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                onError(exception.message ?: "Login failed")
+            }
+    }
+
+    fun signOut() {
+        firebaseAuth.signOut()
+        _isAuthenticated.value = false
         _currentUserId.value = null
+        _didLogout.value = true
     }
 
     fun clearLogoutFlag() {
         _didLogout.value = false
-    }
-
-    fun clearUserData() {
-        _userState.value = UiState.Loading
-        _currentUserId.value = null
-        _isAuthenticated.value = false
-        _errorMessage.value = null
-    }
-
-    fun updateNickname(uid: String, newNickname: String) {
-        viewModelScope.launch {
-            try {
-                userDao.updateNickname(uid, newNickname)
-                loadUserData(uid)
-            } catch (e: Exception) {
-                _userState.value = UiState.Error("Nickname update failed: ${e.localizedMessage}")
-            }
-        }
-    }
-
-    fun setShowRegistrationSuccess(value: Boolean) {
-        _showRegistrationSuccess.value = value
-    }
-
-    fun clearRegistrationSuccessMessage() {
-        _showRegistrationSuccess.value = false
-    }
-
-    fun clearWasJustRegisteredFlag() {
-        _wasJustRegistered.value = false
-    }
-
-    fun setError(message: String?) {
-        _errorMessage.value = message
-    }
-
-
-    fun uploadProfileImage(uid: String, imageUri: Uri) {
-        val storageRef = FirebaseStorage.getInstance().reference
-            .child("profileImages/$uid/${UUID.randomUUID()}.jpg")
-
-        viewModelScope.launch {
-            try {
-                storageRef.putFile(imageUri).addOnSuccessListener {
-                    storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                        viewModelScope.launch {
-                            userDao.updateProfileImageUrl(uid, downloadUrl.toString())
-                            loadUserData(uid) // refresh
-                        }
-                    }
-                }.addOnFailureListener {
-                    _errorMessage.value = "Image upload failed: ${it.localizedMessage}"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Image upload failed: ${e.localizedMessage}"
-            }
-        }
     }
 }
