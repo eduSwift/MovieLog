@@ -47,7 +47,7 @@ fun MovieCardItem(
             .alpha(alpha)
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F4F8))
     ) {
         Column {
             AsyncImage(

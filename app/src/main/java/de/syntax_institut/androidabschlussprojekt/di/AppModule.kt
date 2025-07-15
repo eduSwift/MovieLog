@@ -12,6 +12,7 @@ import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -59,5 +60,6 @@ val appModule = module {
     viewModel { SearchScreenViewModel(get()) }
     viewModel { AuthViewModel(get()) }
     viewModel { MovieViewModel(get()) }
+    viewModel { ProfileScreenViewModel(get()) }
 
 }

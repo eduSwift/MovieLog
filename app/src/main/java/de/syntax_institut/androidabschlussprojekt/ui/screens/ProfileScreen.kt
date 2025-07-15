@@ -2,245 +2,187 @@ package de.syntax_institut.androidabschlussprojekt.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.GetContent
-import androidx.compose.foundation.background
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
 import de.syntax_institut.androidabschlussprojekt.ui.state.UiState
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileScreenViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
-    authViewModel: AuthViewModel = koinViewModel(),
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    profileViewModel: ProfileScreenViewModel = koinViewModel(),
     movieViewModel: MovieViewModel = koinViewModel()
 ) {
-    val userState by authViewModel.userState.collectAsState()
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val currentUserId by authViewModel.currentUserId.collectAsState()
-
+    val userState by profileViewModel.userState.collectAsState()
     val favorites by movieViewModel.favorites.collectAsState()
     val watched by movieViewModel.watched.collectAsState()
     val wantToWatch by movieViewModel.wantToWatch.collectAsState()
+    val scope = rememberCoroutineScope()
 
-    var showLogoutDialog by remember { mutableStateOf(false) }
-    var showCompleteProfileDialog by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(GetContent()) { uri: Uri? ->
-        val uid = currentUserId
-        if (uri != null && uid != null) {
-            authViewModel.uploadProfileImage(uid, uri)
+    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            currentUserId?.let { uid -> profileViewModel.uploadProfileImage(uid, it) }
         }
     }
 
-    LaunchedEffect(isAuthenticated, currentUserId) {
-        if (isAuthenticated) {
-            currentUserId?.let { uid ->
-                authViewModel.loadUserData(uid)
-                movieViewModel.refreshUserMovies(uid)
-            }
-        } else {
-            authViewModel.clearUserData()
-            movieViewModel.clearUserMovies()
+    LaunchedEffect(currentUserId) {
+        currentUserId?.let {
+            profileViewModel.loadUserData(it)
+            movieViewModel.refreshUserMovies(it)
         }
     }
 
-    when (val state = userState) {
-        is UiState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color(0xFFB3D7EA)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = { /* Navigate to Settings later */ }) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings")
             }
         }
 
-        is UiState.Error -> {
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color(0xFFB3D7EA)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Failed to load profile: ${state.message}", color = Color.Red)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Profile Image (Centered)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            when (userState) {
+                is UiState.Success -> {
+                    val user = (userState as UiState.Success).data
+                    AsyncImage(
+                        model = user.profileImageUrl,
+                        contentDescription = "Profile Image",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .clickable { imagePickerLauncher.launch("image/*") },
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                else -> {
+                    CircularProgressIndicator()
+                }
             }
         }
 
-        is UiState.Success -> {
-            val user = state.data
-            val shouldPromptToCompleteProfile = user.nickname.startsWith("User_")
+        Spacer(modifier = Modifier.height(12.dp))
 
-            LaunchedEffect(shouldPromptToCompleteProfile) {
-                if (shouldPromptToCompleteProfile) {
-                    showCompleteProfileDialog = true
-                }
-            }
-
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFB3D7EA))
-            ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 24.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray)
-                                        .clickable { launcher.launch("image/*") },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    AsyncImage(
-                                        model = user.profileImageUrl,
-                                        contentDescription = "Profile picture",
-                                        modifier = Modifier.matchParentSize()
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit",
-                                        tint = Color.White,
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .size(24.dp)
-                                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                                            .padding(4.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                Text(
-                                    text = user.nickname,
-                                    style = MaterialTheme.typography.headlineSmall
-                                )
-                            }
-                        }
-                    }
-
-                    if (favorites.isNotEmpty()) {
-                        item {
-                            MovieListSection("Favorites", favorites, user.uid, movieViewModel, "favorite")
-                        }
-                    }
-
-                    if (wantToWatch.isNotEmpty()) {
-                        item {
-                            MovieListSection("Want to Watch", wantToWatch, user.uid, movieViewModel, "wantToWatch")
-                        }
-                    }
-
-                    if (watched.isNotEmpty()) {
-                        item {
-                            MovieListSection("Watched", watched, user.uid, movieViewModel, "watched")
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
-                    }
-                }
-
-                Button(
-                    onClick = { showLogoutDialog = true },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text("Logout")
-                }
-            }
-
-            if (showLogoutDialog) {
-                AlertDialog(
-                    onDismissRequest = { showLogoutDialog = false },
-                    title = { Text("Logout Confirmation") },
-                    text = { Text("Are you sure you want to log out?") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showLogoutDialog = false
-                            authViewModel.logout()
-                        }) {
-                            Text("Yes")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showLogoutDialog = false }) {
-                            Text("Cancel")
-                        }
-                    }
+        // Nickname
+        when (userState) {
+            is UiState.Success -> {
+                val user = (userState as UiState.Success).data
+                Text(
+                    text = user.nickname,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = user.email,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
+            is UiState.Error -> {
+                Text(text = "Error loading user data", color = MaterialTheme.colorScheme.error)
+            }
+            UiState.Loading -> {
+                Text("Loading...", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            }
+        }
 
-            if (showCompleteProfileDialog) {
-                var nickname by remember { mutableStateOf(user.nickname) }
+        Spacer(modifier = Modifier.height(16.dp))
 
-                AlertDialog(
-                    onDismissRequest = { showCompleteProfileDialog = false },
-                    title = { Text("Complete Your Profile") },
-                    text = {
-                        Column {
-                            Text("Set your nickname:")
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = nickname,
-                                onValueChange = { nickname = it },
-                                label = { Text("Nickname") }
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                authViewModel.updateNickname(user.uid, nickname.trim())
-                                showCompleteProfileDialog = false
-                            }
-                        ) {
-                            Text("Save")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showCompleteProfileDialog = false }) {
-                            Text("Skip")
+        // Sections
+        MovieListSection("Favorites", favorites, currentUserId, movieViewModel)
+        MovieListSection("Watched", watched, currentUserId, movieViewModel)
+        MovieListSection("Want to Watch", wantToWatch, currentUserId, movieViewModel)
+
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun MovieListSection(
+    title: String,
+    movies: List<MovieEntity>,
+    currentUserId: String?,
+    movieViewModel: MovieViewModel
+) {
+    if (movies.isEmpty()) return
+
+    Column {
+        Text(
+            text = "$title (${movies.size})",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .fillMaxWidth()
+        ) {
+            movies.forEach { movie ->
+                MovieCard(
+                    movie = movie,
+                    onClick = {},
+                    onDelete = {
+                        if (currentUserId != null) {
+                            movieViewModel.removeMovie(currentUserId, movie, type = title.toLowerCase())
                         }
                     }
                 )
@@ -250,59 +192,56 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun MovieListSection(
-    title: String,
-    movies: List<MovieEntity>,
-    userId: String,
-    viewModel: MovieViewModel,
-    type: String
+fun MovieCard(
+    movie: MovieEntity,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
-    if (movies.isNotEmpty()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.Black,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
+    val imageUrl = "https://image.tmdb.org/t/p/w500/${movie.posterPath}"
+    val scale = remember { 1f }
+    val alpha = remember { 1f }
 
-        movies.forEach { movie ->
-            Card(
+    Card(
+        modifier = Modifier
+            .padding(end = 12.dp)
+            .width(140.dp)
+            .clickable(onClick = onClick)
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                alpha = alpha
+            ),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Poster for ${movie.title}",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(12.dp)
+                    .height(180.dp),
+                contentScale = ContentScale.Crop
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    AsyncImage(
-                        model = "https://image.tmdb.org/t/p/w92/${movie.posterPath}",
-                        contentDescription = "${movie.title} Poster",
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                Text(
+                    text = movie.title,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 2,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error
                     )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(movie.title, style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text = movie.releaseDate,
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                            color = Color.Gray
-                        )
-                    }
-
-                    IconButton(onClick = {
-                        viewModel.removeMovie(userId, movie, type)
-                    }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Remove")
-                    }
                 }
             }
         }
