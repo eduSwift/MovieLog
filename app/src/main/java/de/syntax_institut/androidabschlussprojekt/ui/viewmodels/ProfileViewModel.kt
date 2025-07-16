@@ -37,6 +37,12 @@ class ProfileViewModel(
         }
     }
 
+    fun markProfileComplete(uid: String) {
+        viewModelScope.launch {
+            userRepository.markProfileComplete(uid)
+        }
+    }
+
     fun updateNickname(uid: String, newNickname: String) {
         viewModelScope.launch {
             try {
@@ -49,20 +55,23 @@ class ProfileViewModel(
     }
 
     fun uploadProfileImage(uid: String, imageUri: Uri) {
-        val storageRef = FirebaseStorage.getInstance().reference
-            .child("profileImages/$uid/${UUID.randomUUID()}.jpg")
-
         viewModelScope.launch {
             try {
-                val uploadTask = storageRef.putFile(imageUri).await()
-                val downloadUrl = storageRef.downloadUrl.await()
+                // ✅ 1. Upload to Firebase Storage
+                val storageRef = FirebaseStorage.getInstance().reference
+                val imageRef = storageRef.child("profile_images/${UUID.randomUUID()}")
+                imageRef.putFile(imageUri).await()
 
-                userRepository.updateProfileImageUrl(uid, downloadUrl.toString())
+                // ✅ 2. Get the download URL
+                val downloadUrl = imageRef.downloadUrl.await().toString()
 
+                // ✅ 3. Save to Room via your Repository method
+                userRepository.uploadProfileImage(uid, downloadUrl)
+
+                // ✅ 4. Refresh local state
                 loadUserData(uid)
-
             } catch (e: Exception) {
-                _userState.value = UiState.Error("Failed to update profile image: ${e.localizedMessage}")
+                _userState.value = UiState.Error("Failed to upload image: ${e.localizedMessage}")
             }
         }
     }

@@ -2,9 +2,11 @@ package de.syntax_institut.androidabschlussprojekt.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import de.syntax_institut.androidabschlussprojekt.data.database.UserEntity
 import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,36 +30,50 @@ class AuthViewModel(
     private val _didLogout = MutableStateFlow(false)
     val didLogout: StateFlow<Boolean> = _didLogout.asStateFlow()
 
+    private val _didDeleteAccount = MutableStateFlow(false)
+    val didDeleteAccount: StateFlow<Boolean> = _didDeleteAccount.asStateFlow()
+
     private val _justSignedUp = MutableStateFlow(false)
     val justSignedUp: StateFlow<Boolean> = _justSignedUp.asStateFlow()
 
     init {
-        checkCurrentUser()
+        // This listener will update _isAuthenticated and _currentUserId when Firebase Auth state changes
+        // This is important for signIn, signOut, etc. but not for the initial signUp flow.
+        firebaseAuth.addAuthStateListener { auth ->
+            val user = auth.currentUser
+            _isAuthenticated.value = user != null
+            _currentUserId.value = user?.uid
+            _authReady.value = true
+        }
     }
 
-    private fun checkCurrentUser() {
-        val user = firebaseAuth.currentUser
-        _isAuthenticated.value = user != null
-        _currentUserId.value = user?.uid
-        _authReady.value = true
-    }
+    // Removed checkCurrentUser() as addAuthStateListener handles initial state and changes
 
     fun signUp(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
                 val uid = result.user?.uid ?: return@addOnSuccessListener
+
                 viewModelScope.launch {
-                    val newUser = UserEntity(
-                        uid = uid,
-                        email = email,
-                        nickname = "User_$uid",
-                        profileImageUrl = ""
-                    )
-                    userRepository.insertUser(newUser)
-                    _isAuthenticated.value = true
-                    _currentUserId.value = uid
-                    _justSignedUp.value = true
-                    onSuccess()
+                    try {
+                        val newUser = UserEntity(
+                            uid = uid,
+                            email = email,
+                            nickname = "",
+                            profileImageUrl = "",
+                            isProfileComplete = false
+                        )
+                        userRepository.insertUser(newUser)
+
+                        // IMPORTANT: Do NOT set _isAuthenticated or _currentUserId here.
+                        // The user is created, but we want them to explicitly sign in.
+                        _justSignedUp.value = true
+                        onSuccess() // Signal to UI that account was created
+                    } catch (e: Exception) {
+                        onError("Failed to insert user in Room: ${e.localizedMessage}")
+                        // Optionally delete Firebase user if Room insertion fails
+                        result.user?.delete()
+                    }
                 }
             }
             .addOnFailureListener { exception ->
@@ -68,9 +84,7 @@ class AuthViewModel(
     fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         firebaseAuth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener {
-                val uid = it.user?.uid
-                _isAuthenticated.value = uid != null
-                _currentUserId.value = uid
+                // The addAuthStateListener will handle updating _isAuthenticated and _currentUserId
                 onSuccess()
             }
             .addOnFailureListener { exception ->
@@ -78,34 +92,25 @@ class AuthViewModel(
             }
     }
 
-
     fun sendPasswordResetEmail(email: String, onComplete: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
-            val firebaseUser = firebaseAuth.currentUser
-            if (firebaseUser != null) {
-                val userEmail = firebaseUser.email
-                if (!userEmail.isNullOrEmpty()) {
-                    firebaseAuth.sendPasswordResetEmail(userEmail)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                onComplete(true, null)
-                            } else {
-                                onComplete(false, task.exception?.message)
-                            }
-                        }
-                } else {
-                    onComplete(false, "No email associated with this user.")
+            // This part might need to be adjusted if called when user is not logged in
+            // For now, it seems fine to assume current user or prompt for email.
+            // Simplified for brevity, consider specific use case for this function.
+            firebaseAuth.sendPasswordResetEmail(email)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        onComplete(true, null)
+                    } else {
+                        onComplete(false, task.exception?.message)
+                    }
                 }
-            } else {
-                onComplete(false, "User is not logged in.")
-            }
         }
     }
 
     fun signOut() {
         firebaseAuth.signOut()
-        _isAuthenticated.value = false
-        _currentUserId.value = null
+        // addAuthStateListener will set _isAuthenticated and _currentUserId to null
         _didLogout.value = true
     }
 
@@ -115,5 +120,49 @@ class AuthViewModel(
 
     fun clearSignUpFlag() {
         _justSignedUp.value = false
+    }
+
+    fun deleteAccount(
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val user = firebaseAuth.currentUser
+        val uid = user?.uid
+        val email = user?.email
+
+        if (user == null || uid == null || email.isNullOrBlank()) {
+            onError("User not logged in or missing credentials.")
+            return
+        }
+
+        val credential = EmailAuthProvider.getCredential(email, password)
+
+        user.reauthenticate(credential)
+            .addOnSuccessListener {
+                viewModelScope.launch {
+                    try {
+                        userRepository.deleteUser(uid)
+                        user.delete()
+                            .addOnSuccessListener {
+                                // addAuthStateListener will set _isAuthenticated and _currentUserId to null
+                                _didDeleteAccount.value = true
+                                onSuccess()
+                            }
+                            .addOnFailureListener { e ->
+                                onError("Failed to delete Firebase user: ${e.message}")
+                            }
+                    } catch (e: Exception) {
+                        onError("Failed to delete user data: ${e.localizedMessage}")
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                onError("Re-authentication failed: ${e.message}")
+            }
+    }
+
+    fun clearDeleteFlag() {
+        _didDeleteAccount.value = false
     }
 }

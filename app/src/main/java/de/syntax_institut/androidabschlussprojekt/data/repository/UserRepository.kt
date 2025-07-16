@@ -16,11 +16,15 @@ class UserRepository(private val userDao: UserDao) {
         userDao.updateNickname(uid, nickname)
     }
 
-    suspend fun updateProfileImageUrl(uid: String, url: String) {
-        userDao.updateProfileImageUrl(uid, url)
+    suspend fun uploadProfileImage(uid: String, imageUrl: String) {
+        userDao.uploadProfileImage(uid, imageUrl)
     }
 
     suspend fun deleteUser(uid: String) {
-        userDao.deleteUser(uid)
+        userDao.deleteUserById(uid)
+    }
+
+    suspend fun markProfileComplete(uid: String) {
+        userDao.markProfileComplete(uid)
     }
 }

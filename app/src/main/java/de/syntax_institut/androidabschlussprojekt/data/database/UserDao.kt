@@ -17,12 +17,15 @@ interface UserDao {
     fun observeUserById(uid: String): kotlinx.coroutines.flow.Flow<UserEntity?>
 
     @Query("DELETE FROM users WHERE uid = :uid")
-    suspend fun deleteUser(uid: String)
+    suspend fun deleteUserById(uid: String)
 
     @Query("UPDATE users SET nickname = :nickname WHERE uid = :uid")
     suspend fun updateNickname(uid: String, nickname: String)
 
-    @Query("UPDATE users SET profileImageUrl = :url WHERE uid = :uid")
-    suspend fun updateProfileImageUrl(uid: String, url: String)
+    @Query("UPDATE users SET profileImageUrl = :imageUrl WHERE uid = :uid")
+    suspend fun uploadProfileImage(uid: String, imageUrl: String)
+
+    @Query("UPDATE users SET isProfileComplete = 1 WHERE uid = :uid")
+    suspend fun markProfileComplete(uid: String)
 
 }

@@ -35,6 +35,7 @@ fun MainNavigation(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val authReady by authViewModel.authReady.collectAsState()
 
+    // Handle logout navigation
     LaunchedEffect(didLogout) {
         if (didLogout) {
             navController.navigate(Routes.AUTH) {
@@ -53,7 +54,7 @@ fun MainNavigation(
     } else {
         NavHost(
             navController = navController,
-            startDestination = Routes.HOME
+            startDestination = if (isAuthenticated) Routes.HOME else Routes.AUTH // Start at AUTH if not authenticated
         ) {
             composable(Routes.HOME) {
                 MainScaffold(navController = navController) { innerPadding ->
@@ -109,26 +110,27 @@ fun MainNavigation(
 
             composable(Routes.AUTH) {
                 MainScaffold(navController = navController) { innerPadding ->
-
-                    val justSignedUp by authViewModel.justSignedUp.collectAsState()
-
-                    if (isAuthenticated && !justSignedUp) {
+                    if (isAuthenticated) {
+                        // If authenticated, show ProfileScreen
                         ProfileScreen(
                             modifier = Modifier.padding(innerPadding),
                             navController = navController,
                             authViewModel = authViewModel
                         )
                     } else {
+                        // If not authenticated, show AuthScreen for login/signup
                         AuthScreen(
                             modifier = Modifier.padding(innerPadding),
                             authViewModel = authViewModel,
                             onLoginSuccess = {
-                                authViewModel.clearSignUpFlag()
-                                navController.navigate(Routes.HOME) {
-                                    popUpTo(Routes.AUTH) { inclusive = true }
+                                // After successful login, navigate to ProfileScreen
+                                // This will re-evaluate the `if (isAuthenticated)` block and show ProfileScreen
+                                navController.navigate(Routes.AUTH) {
+                                    popUpTo(Routes.HOME) { inclusive = false } // Clear back stack to HOME
                                     launchSingleTop = true
                                 }
                             }
+                            // onSignUpSuccess is no longer needed here as AuthScreen manages that state internally
                         )
                     }
                 }
@@ -140,11 +142,9 @@ fun MainNavigation(
                     isDarkModeEnabled = isDarkModeEnabled,
                     onToggleDarkMode = onToggleDarkMode,
                     settingsViewModel = settingsViewModel,
-                    onEditNickname = {},
                     onChangePassword = {},
                     onDeleteAccount = {},
-                    onLogout = { authViewModel.signOut()
-                    }
+                    onLogout = { authViewModel.signOut() }
                 )
             }
         }

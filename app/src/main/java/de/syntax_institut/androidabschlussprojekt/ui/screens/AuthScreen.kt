@@ -1,29 +1,12 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
-import android.R.attr.enabled
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,16 +19,40 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 fun AuthScreen(
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit // Callback for successful login
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
-    var isLoginMode by remember { mutableStateOf(true) }
+    var isLoginMode by remember { mutableStateOf(true) } // Start in login mode
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
-
     var accountCreatedMessage by remember { mutableStateOf<String?>(null) }
+
+    val justSignedUp by authViewModel.justSignedUp.collectAsState()
+
+    // Reset state when screen is shown (e.g., after logout or deletion)
+    LaunchedEffect(Unit) {
+        email = ""
+        password = ""
+        repeatPassword = ""
+        errorMessage = null
+        // isLoginMode is controlled by the justSignedUp flag below, or defaults to true
+        accountCreatedMessage = null
+        isLoading = false
+    }
+
+    // Observe justSignedUp flag from ViewModel
+    LaunchedEffect(justSignedUp) {
+        if (justSignedUp) {
+            accountCreatedMessage = "Account successfully created!"
+            isLoginMode = true // Switch to login mode
+            email = "" // Clear fields for new login
+            password = ""
+            repeatPassword = ""
+            authViewModel.clearSignUpFlag() // Clear the flag after displaying the message
+        }
+    }
 
     Column(
         modifier = modifier
@@ -100,7 +107,7 @@ fun AuthScreen(
             onClick = {
                 isLoading = true
                 errorMessage = null
-                accountCreatedMessage = null
+                accountCreatedMessage = null // Clear previous messages
 
                 if (isLoginMode) {
                     authViewModel.signIn(
@@ -108,7 +115,7 @@ fun AuthScreen(
                         password = password,
                         onSuccess = {
                             isLoading = false
-                            onLoginSuccess()
+                            onLoginSuccess() // Navigate to ProfileScreen
                         },
                         onError = {
                             isLoading = false
@@ -127,11 +134,9 @@ fun AuthScreen(
                         password = password,
                         onSuccess = {
                             isLoading = false
-                            isLoginMode = true
-                            email = ""
-                            password = ""
-                            repeatPassword = ""
-                            accountCreatedMessage = "Account successfully created"
+                            // After sign up, the LaunchedEffect(justSignedUp) will trigger
+                            // to display the message and switch to login mode.
+                            // No explicit navigation here for signup success.
                         },
                         onError = {
                             isLoading = false
@@ -152,6 +157,7 @@ fun AuthScreen(
             onClick = {
                 isLoginMode = !isLoginMode
                 errorMessage = null
+                accountCreatedMessage = null // Clear message when switching modes
                 repeatPassword = ""
             },
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -167,10 +173,11 @@ fun AuthScreen(
             )
         }
 
+        // Display account created message
         if (accountCreatedMessage != null) {
             Text(
                 text = accountCreatedMessage ?: "",
-                color = Color(0xFF2E7D32),
+                color = Color(0xFF2E7D32), // A nice green color
                 modifier = Modifier.padding(top = 12.dp)
             )
         }
