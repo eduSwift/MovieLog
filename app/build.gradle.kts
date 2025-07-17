@@ -114,6 +114,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
 
 }
 

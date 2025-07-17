@@ -11,10 +11,11 @@ fun String.decodeURLPath(): String =
     URLDecoder.decode(this, StandardCharsets.UTF_8.toString())
 
 object Routes {
+    const val SPLASH = "splash"
     const val HOME = "home"
     const val SEARCH = "search"
-    const val AUTH = "profile"
-    const val PROFILE = "profile_entry"
+    const val AUTH = "auth"
+    const val PROFILE = "profile"
     const val SETTINGS = "settings"
     const val MOVIE_DETAIL = "movie_detail/{movieId}/{posterPath}/{title}/{overview}/{releaseDate}"
 

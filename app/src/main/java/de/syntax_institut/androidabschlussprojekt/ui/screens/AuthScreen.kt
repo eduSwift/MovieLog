@@ -1,5 +1,6 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -7,6 +8,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,38 +21,39 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 fun AuthScreen(
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit // Callback for successful login
+    onLoginSuccess: () -> Unit,
+    onSignUpSuccess: () -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var repeatPassword by remember { mutableStateOf("") }
-    var isLoginMode by remember { mutableStateOf(true) } // Start in login mode
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-    var accountCreatedMessage by remember { mutableStateOf<String?>(null) }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var repeatPassword by rememberSaveable { mutableStateOf("") }
+    var isLoginMode by rememberSaveable { mutableStateOf(true) }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+    var accountCreatedMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     val justSignedUp by authViewModel.justSignedUp.collectAsState()
 
-    // Reset state when screen is shown (e.g., after logout or deletion)
+    Log.d("AuthScreen", "Recomposed. justSignedUp: $justSignedUp, accountCreatedMessage: $accountCreatedMessage")
+
     LaunchedEffect(Unit) {
-        email = ""
-        password = ""
-        repeatPassword = ""
-        errorMessage = null
-        // isLoginMode is controlled by the justSignedUp flag below, or defaults to true
-        accountCreatedMessage = null
+        if (email.isBlank() && password.isBlank() && repeatPassword.isBlank()) {
+            errorMessage = null
+        }
         isLoading = false
     }
 
-    // Observe justSignedUp flag from ViewModel
+    // This LaunchedEffect specifically handles the 'just signed up' event
     LaunchedEffect(justSignedUp) {
         if (justSignedUp) {
             accountCreatedMessage = "Account successfully created!"
-            isLoginMode = true // Switch to login mode
-            email = "" // Clear fields for new login
+            isLoginMode = true // Switch to login mode to show the message on the login form
+            email = "" // Clear password related fields for security and fresh input
             password = ""
             repeatPassword = ""
-            authViewModel.clearSignUpFlag() // Clear the flag after displaying the message
+            // IMPORTANT: Clear the ViewModel flag IMMEDIATELY after observing it
+            authViewModel.clearSignUpFlag()
+            Log.d("AuthScreen", "Detected justSignedUp. Message set to: '$accountCreatedMessage'. ViewModel flag cleared.")
         }
     }
 
@@ -58,7 +61,8 @@ fun AuthScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = if (isLoginMode) "Login" else "Sign Up",
@@ -107,36 +111,39 @@ fun AuthScreen(
             onClick = {
                 isLoading = true
                 errorMessage = null
-                accountCreatedMessage = null // Clear previous messages
 
                 if (isLoginMode) {
+                    // Only clear the account created message when attempting a LOGIN
+                    accountCreatedMessage = null
                     authViewModel.signIn(
                         email = email,
                         password = password,
                         onSuccess = {
                             isLoading = false
-                            onLoginSuccess() // Navigate to ProfileScreen
+                            accountCreatedMessage = null // Ensure cleared on successful login
+                            onLoginSuccess() // Navigate away on success
                         },
                         onError = {
                             isLoading = false
                             errorMessage = it
                         }
                     )
-                } else {
+                } else { // This is the Sign Up path
                     if (password != repeatPassword) {
                         isLoading = false
                         errorMessage = "Passwords do not match"
                         return@Button
                     }
 
+                    // DO NOT clear accountCreatedMessage = null here for the signup path.
+                    // It should be set by the LaunchedEffect after navigation.
                     authViewModel.signUp(
                         email = email,
                         password = password,
                         onSuccess = {
                             isLoading = false
-                            // After sign up, the LaunchedEffect(justSignedUp) will trigger
-                            // to display the message and switch to login mode.
-                            // No explicit navigation here for signup success.
+                            // The message will be set by the LaunchedEffect(justSignedUp) when it runs
+                            onSignUpSuccess() // Navigates back to AuthScreen
                         },
                         onError = {
                             isLoading = false
@@ -157,33 +164,40 @@ fun AuthScreen(
             onClick = {
                 isLoginMode = !isLoginMode
                 errorMessage = null
-                accountCreatedMessage = null // Clear message when switching modes
+                // IMPORTANT: Clear the message when switching modes
+                accountCreatedMessage = null
                 repeatPassword = ""
+                // Also clear the ViewModel flag if user explicitly switches mode
+                authViewModel.clearSignUpFlag()
             },
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text(if (isLoginMode) "Don't have an account yet? Sign up" else "Already have an account? Log in")
         }
 
+        // Display error message
         if (errorMessage != null) {
             Text(
                 text = errorMessage ?: "",
                 color = Color.Red,
                 modifier = Modifier.padding(top = 12.dp)
             )
+            Log.d("AuthScreen", "Error message displayed: '$errorMessage'")
         }
 
-        // Display account created message
+        // Display account created message - this should be below the buttons
         if (accountCreatedMessage != null) {
             Text(
                 text = accountCreatedMessage ?: "",
                 color = Color(0xFF2E7D32), // A nice green color
+                style = MaterialTheme.typography.bodyLarge, // Adjust style if needed
                 modifier = Modifier.padding(top = 12.dp)
             )
+            Log.d("AuthScreen", "Account created message DISPLAYED: '$accountCreatedMessage'")
         }
 
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
         }
     }
 }
