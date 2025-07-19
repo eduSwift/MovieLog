@@ -1,7 +1,5 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,6 +26,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -171,17 +170,17 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFB3D7EA)
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color(0xFFB3D7EA)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFB3D7EA))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
         ) {
             Column(
@@ -217,8 +216,7 @@ fun SettingsScreen(
                 }
 
                 SettingsOptionRow(Icons.Default.Person, "Contact") {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/eduardo-rodriguescruz/"))
-                    context.startActivity(intent)
+                    navController.navigate(Routes.CONTACT)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

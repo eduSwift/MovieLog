@@ -6,13 +6,13 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import de.syntax_institut.androidabschlussprojekt.navigation.Routes
@@ -24,7 +24,6 @@ fun MainScaffold(
     isAuthenticated: Boolean,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val backgroundColor = Color(0xFFB3D7EA)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -36,7 +35,7 @@ fun MainScaffold(
 
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = backgroundColor) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
                 items.forEach { (route, icon) ->
                     val selectedRoute = if (route == Routes.AUTH && isAuthenticated) Routes.PROFILE else route
 
@@ -73,7 +72,7 @@ fun MainScaffold(
                 }
             }
         },
-        containerColor = backgroundColor,
+        containerColor = MaterialTheme.colorScheme.background,
         content = content
     )
 }

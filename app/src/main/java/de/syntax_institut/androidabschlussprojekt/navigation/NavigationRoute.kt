@@ -18,6 +18,7 @@ object Routes {
     const val PROFILE = "profile_entry"
     const val SETTINGS = "settings"
     const val MOVIE_DETAIL = "movie_detail/{movieId}/{posterPath}/{title}/{overview}/{releaseDate}"
+    const val CONTACT = "contact"
 
 
     fun movieDetailRoute(

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun AuthScreen(
@@ -50,8 +51,11 @@ fun AuthScreen(
             email = ""
             password = ""
             repeatPassword = ""
+            delay(1400)
+            onSignUpSuccess()
+
             authViewModel.clearSignUpFlag()
-            Log.d("AuthScreen", "Detected justSignedUp. Message set to: '$accountCreatedMessage'. ViewModel flag cleared.")
+            Log.d("AuthScreen", "Detected justSignedUp. Message shown and navigation triggered.")
         }
     }
 
@@ -132,13 +136,11 @@ fun AuthScreen(
                         return@Button
                     }
 
-
                     authViewModel.signUp(
                         email = email,
                         password = password,
                         onSuccess = {
                             isLoading = false
-                            onSignUpSuccess()
                         },
                         onError = {
                             isLoading = false

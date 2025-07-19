@@ -62,7 +62,6 @@ fun MovieDetailScreen(
     authViewModel: AuthViewModel = koinViewModel(),
     movieViewModel: MovieViewModel = koinViewModel()
 ) {
-    val backgroundColor = Color(0xFFB3D7EA)
     val context = LocalContext.current
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val userId by authViewModel.currentUserId.collectAsState()
@@ -116,7 +115,7 @@ fun MovieDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = backgroundColor,
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = Color.Black
                 )
             )
@@ -125,7 +124,7 @@ fun MovieDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
@@ -184,7 +183,6 @@ fun MovieDetailScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Want to Watch Button
                 OutlinedButton(onClick = {
                     if (isAuthenticated && userId != null) {
                         movieViewModel.toggleFlag(userId!!, movieEntity, "wantToWatch")

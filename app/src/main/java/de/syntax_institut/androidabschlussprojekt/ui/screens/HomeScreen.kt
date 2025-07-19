@@ -35,12 +35,11 @@ fun HomeScreen(
     onProfileClick: () -> Unit
 ) {
     val moviesByCategory = viewModel.moviesByCategory.collectAsState()
-    val backgroundColor = Color(0xFFB3D7EA)
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         moviesByCategory.value.forEach { (category, movies) ->

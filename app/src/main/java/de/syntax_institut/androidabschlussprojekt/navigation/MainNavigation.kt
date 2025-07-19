@@ -15,6 +15,7 @@ import androidx.navigation.navArgument
 import de.syntax_institut.androidabschlusprojekt.ui.components.MainScaffold
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.ui.screens.AuthScreen
+import de.syntax_institut.androidabschlussprojekt.ui.screens.ContactScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.HomeScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.MovieDetailScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.ProfileScreen
@@ -182,6 +183,12 @@ fun MainNavigation(
                 onChangePassword = {},
                 onDeleteAccount = {},
                 onLogout = { authViewModel.signOut() }
+            )
+        }
+
+        composable(Routes.CONTACT) {
+            ContactScreen(
+                navController = navController
             )
         }
     }
