@@ -100,7 +100,7 @@ fun ContactScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Passionate about building clean, user-friendly mobile apps.",
+                text = "Passionate about building clean, user-friendly mobile apps. You can reach me on my socials",
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground

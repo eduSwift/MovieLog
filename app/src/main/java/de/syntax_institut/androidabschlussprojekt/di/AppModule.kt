@@ -5,12 +5,15 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.database.AppDatabase
+import de.syntax_institut.androidabschlussprojekt.data.database.CommentDao
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
 import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
 import de.syntax_institut.androidabschlussprojekt.data.datastore.ThemePreferences
+import de.syntax_institut.androidabschlussprojekt.data.repository.CommentRepository
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
 import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.CommentViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileViewModel
@@ -54,10 +57,12 @@ val appModule = module {
 
     single<UserDao> { get<AppDatabase>().userDao() }
     single<MovieDao> { get<AppDatabase>().movieDao() }
+    single<CommentDao> { get<AppDatabase>().commentDao()}
 
     single { UserRepository(get()) }
     single { MovieRepository(api = get(), movieDao = get()) }
-    single { ThemePreferences (get()) }
+    single { ThemePreferences(get()) }
+    single { CommentRepository(get()) }
 
     viewModel { HomeScreenViewModel(get()) }
     viewModel { SearchScreenViewModel(get()) }
@@ -65,5 +70,6 @@ val appModule = module {
     viewModel { MovieViewModel(get()) }
     viewModel { ProfileViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
+    viewModel { CommentViewModel(get(), get()) }
 
 }

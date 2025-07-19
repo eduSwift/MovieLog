@@ -54,32 +54,10 @@ class ProfileViewModel(
         }
     }
 
-    fun uploadProfileImage(uri: Uri, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
-        MediaManager.get().upload(uri)
-            .callback(object : UploadCallback {
-                override fun onStart(requestId: String?) {
-                }
-                override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
-                override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
-                    val url = resultData?.get("secure_url") as? String
-                    url?.let { onSuccess(it) }
-                }
-                override fun onError(requestId: String?, error: ErrorInfo?) {
-                    onError(error?.description ?: "Unknown error")
-                }
-                override fun onReschedule(requestId: String?, error: ErrorInfo?) {}
-            })
-            .dispatch()
-    }
-
     fun setProfileImageManually(uid: String, imageUrl: String) {
         viewModelScope.launch {
             userRepository.uploadProfileImage(uid, imageUrl)
             loadUserData(uid)
         }
-    }
-
-    fun clearUserData() {
-        _userState.value = UiState.Loading
     }
 }
