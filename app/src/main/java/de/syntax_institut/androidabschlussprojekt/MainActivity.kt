@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.navigation.MainNavigation
@@ -14,6 +14,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.theme.AndroidAbschlussproje
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,10 +24,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsViewModel: SettingsViewModel = koinViewModel()
             val isDarkModeEnabled by settingsViewModel.isDarkModeEnabled.collectAsState()
+            val authViewModel: AuthViewModel =  getViewModel()
 
             AndroidAbschlussprojektTheme(darkTheme = isDarkModeEnabled) {
                 val navController = rememberNavController()
-                val authViewModel: AuthViewModel = koinViewModel()
 
                 MainNavigation(
                     navController = navController,
@@ -42,7 +43,8 @@ class MainActivity : ComponentActivity() {
                     },
                     isDarkModeEnabled = isDarkModeEnabled,
                     onToggleDarkMode = { enabled -> settingsViewModel.setDarkModeEnabled(enabled) },
-                    settingsViewModel = settingsViewModel
+                    settingsViewModel = settingsViewModel,
+                    authViewModel = authViewModel
                 )
             }
         }

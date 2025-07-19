@@ -107,6 +107,7 @@ dependencies {
 
     implementation("androidx.activity:activity-ktx:1.7.2")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha10")
+    implementation("com.cloudinary:cloudinary-android:2.3.1")
 
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-auth-ktx")

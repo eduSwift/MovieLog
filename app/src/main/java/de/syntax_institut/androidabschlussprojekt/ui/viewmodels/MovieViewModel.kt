@@ -13,10 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-// *** FIX 1: Change constructor to use MovieRepository ***
 class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
 
-    // StateFlows for API movie lists
     private val _movies = MutableStateFlow<List<Movie>>(emptyList())
     val movies: StateFlow<List<Movie>> = _movies.asStateFlow()
 
@@ -26,7 +24,6 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    // StateFlows for database movie lists (MovieEntity)
     private val _favorites = MutableStateFlow<List<MovieEntity>>(emptyList())
     val favorites: StateFlow<List<MovieEntity>> = _favorites.asStateFlow()
 
@@ -43,14 +40,14 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
     fun getMovies(category: MovieCategory) {
         viewModelScope.launch {
             try {
-                _isLoadingMovies.value = true // Set loading for API calls as well
+                _isLoadingMovies.value = true
                 val fetchedMovies = repository.getMoviesByCategory(category)
                 _movies.value = fetchedMovies
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = "Error fetching movies: ${e.message}"
             } finally {
-                _isLoadingMovies.value = false // Reset loading
+                _isLoadingMovies.value = false
             }
         }
     }
@@ -58,14 +55,14 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
     fun searchMovies(query: String) {
         viewModelScope.launch {
             try {
-                _isLoadingMovies.value = true // Set loading for API calls as well
+                _isLoadingMovies.value = true
                 val results = repository.searchMovies(query)
                 _searchResult.value = results
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = "Error searching movies: ${e.message}"
             } finally {
-                _isLoadingMovies.value = false // Reset loading
+                _isLoadingMovies.value = false
             }
         }
     }
@@ -78,7 +75,6 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
         Log.d("MovieViewModel", "Cleared all user movie lists.")
     }
 
-    // *** FIX 2: Collect from MovieRepository's flows and manage loading state ***
     fun refreshUserMovies(userId: String) {
         if (userId.isEmpty()) {
             Log.e("MovieViewModel", "Cannot refresh user movies: userId is empty.")
@@ -89,7 +85,6 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
         _isLoadingMovies.value = true
         Log.d("MovieViewModel", "Starting movie data refresh for user $userId.")
 
-        // Launch separate coroutines for each flow collection
         viewModelScope.launch {
             try {
                 repository.getFavoritesForUser(userId).collectLatest {
@@ -125,56 +120,15 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
         }
     }
 
-    // *** FIX 3: Ensure 'movie' parameter is MovieEntity, and use repository ***
-    fun toggleFlag(
-        userId: String,
-        movie: MovieEntity, // <-- This MUST be MovieEntity to match MovieDetailScreen
-        type: String
-    ) = viewModelScope.launch {
-        try {
-            // Find the movie entity in the local database for this specific user.
-            // *** FIX 4: Use repository.getMovieByIdAndUserId and movie.tmdbMovieId ***
-            val existingMovie = repository.getMovieByIdAndUserId(movie.tmdbMovieId, userId)
-
-            val movieToSave: MovieEntity
-
-            if (existingMovie != null) {
-                // If existing, update its flags
-                movieToSave = existingMovie.copy(
-                    isFavorite = if (type == "favorite") !existingMovie.isFavorite else existingMovie.isFavorite,
-                    isWatched = if (type == "watched") !existingMovie.isWatched else existingMovie.isWatched,
-                    isWantToWatch = if (type == "wantToWatch") !existingMovie.isWantToWatch else existingMovie.isWantToWatch
-                )
-                Log.d("MovieViewModel", "Toggled flag '$type' for existing movie ${movieToSave.title}. New state: $movieToSave")
-            } else {
-                // If not found, create a new MovieEntity using the one passed from the detail screen
-                // The 'id' in 'movie' is 0, so Room will auto-generate it.
-                movieToSave = movie.copy(
-                    isFavorite = (type == "favorite"),
-                    isWatched = (type == "watched"),
-                    isWantToWatch = (type == "wantToWatch")
-                )
-                Log.d("MovieViewModel", "Inserting new movie with flag '$type': ${movie.title}. Initial state: $movieToSave")
-            }
-
-            // *** FIX 5: Use repository.insertMovie (handles both insert and update) ***
-            repository.insertMovie(movieToSave)
-            refreshUserMovies(userId)
-        } catch (e: Exception) {
-            Log.e("MovieViewModel", "Error toggling flag '$type' for movie ${movie.title}: ${e.localizedMessage}")
-        }
-    }
-
-    // *** FIX 6: Use repository.getMovieByIdAndUserId and repository.deleteMovie ***
     fun removeMovie(userId: String, movie: MovieEntity, type: String) = viewModelScope.launch {
         try {
-            val existingMovie = repository.getMovieByIdAndUserId(movie.tmdbMovieId, userId) // Use movie.tmdbMovieId here
+            val existingMovie = repository.getMovieByIdAndUserId(movie.tmdbMovieId, userId)
 
             if (existingMovie != null) {
-                val movieAfterRemovalAttempt = when (type) {
-                    "favorite" -> existingMovie.copy(isFavorite = false)
+                val movieAfterRemovalAttempt = when (type.lowercase()) {
+                    "favorites" -> existingMovie.copy(isFavorite = false)
                     "watched" -> existingMovie.copy(isWatched = false)
-                    "wantToWatch" -> existingMovie.copy(isWantToWatch = false)
+                    "want to watch" -> existingMovie.copy(isWantToWatch = false)
                     else -> existingMovie
                 }
 
@@ -185,7 +139,6 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
                     repository.deleteMovie(movieAfterRemovalAttempt)
                     Log.d("MovieViewModel", "Deleted movie ${movie.title} as all flags are now false.")
                 } else {
-                    // *** FIX 7: Use repository.insertMovie to update the existing entity ***
                     repository.insertMovie(movieAfterRemovalAttempt)
                     Log.d("MovieViewModel", "Removed flag '$type' from movie ${movie.title}. Remaining state: $movieAfterRemovalAttempt")
                 }
@@ -198,13 +151,43 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
         }
     }
 
-    fun deleteMovie(movie: MovieEntity) { // This function was missing its implementation in the provided snippet
-        viewModelScope.launch {
-            try {
-                repository.deleteMovie(movie)
-            } catch (e: Exception) {
-                Log.e("MovieViewModel", "Error deleting single movie: ${e.message}")
+
+    fun toggleFlag(
+        userId: String,
+        movie: MovieEntity,
+        type: String
+    ) = viewModelScope.launch {
+        try {
+            val existingMovie = repository.getMovieByIdAndUserId(movie.tmdbMovieId, userId)
+
+            val movieToSave: MovieEntity = if (existingMovie != null) {
+                existingMovie.copy(
+                    isFavorite = if (type == "favorite") !existingMovie.isFavorite else existingMovie.isFavorite,
+                    isWatched = if (type == "watched") !existingMovie.isWatched else existingMovie.isWatched,
+                    isWantToWatch = if (type == "wantToWatch") !existingMovie.isWantToWatch else existingMovie.isWantToWatch
+                )
+            } else {
+                val assignedListType = when (type) {
+                    "favorite" -> "favorites"
+                    "watched" -> "watched"
+                    "wantToWatch" -> "want to watch"
+                    else -> "unknown"
+                }
+
+                movie.copy(
+                    userId = userId,
+                    isFavorite = (type == "favorite"),
+                    isWatched = (type == "watched"),
+                    isWantToWatch = (type == "wantToWatch"),
+                    listType = assignedListType
+                )
             }
+
+            repository.insertMovie(movieToSave)
+            refreshUserMovies(userId)
+
+        } catch (e: Exception) {
+            Log.e("MovieViewModel", "Error toggling flag '$type' for movie ${movie.title}: ${e.localizedMessage}")
         }
     }
 
@@ -212,7 +195,7 @@ class MovieViewModel(private val repository: MovieRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.deleteAllMoviesByUserId(userId)
-                refreshUserMovies(userId) // Refresh lists after deletion
+                refreshUserMovies(userId)
             } catch (e: Exception) {
                 Log.e("MovieViewModel", "Error deleting all user movies: ${e.message}")
             }

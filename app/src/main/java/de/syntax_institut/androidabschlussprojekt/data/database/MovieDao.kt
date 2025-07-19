@@ -13,7 +13,6 @@ interface MovieDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMovie(movie: MovieEntity)
 
-    // These methods return Flow<List<MovieEntity>> as discussed for live updates
     @Query("SELECT * FROM movies WHERE userId = :userId AND isFavorite = 1")
     fun getFavoriteMovies(userId: String): Flow<List<MovieEntity>>
 
@@ -29,13 +28,9 @@ interface MovieDao {
     @Delete
     suspend fun deleteMovie(movie: MovieEntity)
 
-    // --- ADDED THIS METHOD TO FIX 'Unresolved reference: getMoviesForUser' ---
-    // Returns all movies for a specific user, suitable for observation.
     @Query("SELECT * FROM movies WHERE userId = :userId")
     fun getMoviesForUser(userId: String): Flow<List<MovieEntity>>
 
-    // --- ADDED THIS METHOD TO FIX 'Unresolved reference: deleteAllMoviesByUserId' ---
-    // Deletes all movie entities associated with a given user ID.
     @Query("DELETE FROM movies WHERE userId = :userId")
     suspend fun deleteAllMoviesByUserId(userId: String)
 }

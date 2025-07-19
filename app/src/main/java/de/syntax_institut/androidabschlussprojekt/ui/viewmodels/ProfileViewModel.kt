@@ -3,7 +3,9 @@ package de.syntax_institut.androidabschlussprojekt.ui.viewmodels
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.storage.FirebaseStorage
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import de.syntax_institut.androidabschlussprojekt.data.database.UserEntity
 import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
 import de.syntax_institut.androidabschlussprojekt.ui.state.UiState
@@ -11,8 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.util.UUID
 
 class ProfileViewModel(
     private val userRepository: UserRepository
@@ -54,25 +54,28 @@ class ProfileViewModel(
         }
     }
 
-    fun uploadProfileImage(uid: String, imageUri: Uri) {
+    fun uploadProfileImage(uri: Uri, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+        MediaManager.get().upload(uri)
+            .callback(object : UploadCallback {
+                override fun onStart(requestId: String?) {
+                }
+                override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
+                override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
+                    val url = resultData?.get("secure_url") as? String
+                    url?.let { onSuccess(it) }
+                }
+                override fun onError(requestId: String?, error: ErrorInfo?) {
+                    onError(error?.description ?: "Unknown error")
+                }
+                override fun onReschedule(requestId: String?, error: ErrorInfo?) {}
+            })
+            .dispatch()
+    }
+
+    fun setProfileImageManually(uid: String, imageUrl: String) {
         viewModelScope.launch {
-            try {
-                // ✅ 1. Upload to Firebase Storage
-                val storageRef = FirebaseStorage.getInstance().reference
-                val imageRef = storageRef.child("profile_images/${UUID.randomUUID()}")
-                imageRef.putFile(imageUri).await()
-
-                // ✅ 2. Get the download URL
-                val downloadUrl = imageRef.downloadUrl.await().toString()
-
-                // ✅ 3. Save to Room via your Repository method
-                userRepository.uploadProfileImage(uid, downloadUrl)
-
-                // ✅ 4. Refresh local state
-                loadUserData(uid)
-            } catch (e: Exception) {
-                _userState.value = UiState.Error("Failed to upload image: ${e.localizedMessage}")
-            }
+            userRepository.uploadProfileImage(uid, imageUrl)
+            loadUserData(uid)
         }
     }
 

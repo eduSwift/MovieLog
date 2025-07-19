@@ -1,4 +1,4 @@
-package de.syntax_institut.androidabschlussprojekt.ui.components
+package de.syntax_institut.androidabschlusprojekt.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
@@ -17,9 +17,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import de.syntax_institut.androidabschlussprojekt.navigation.Routes
 
+
 @Composable
 fun MainScaffold(
     navController: NavController,
+    isAuthenticated: Boolean,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val backgroundColor = Color(0xFFB3D7EA)
@@ -27,25 +29,46 @@ fun MainScaffold(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val items = listOf(
-        Routes.HOME to Icons.Default.Home,
-        Routes.SEARCH to Icons.Default.Search,
-        Routes.AUTH to Icons.Default.Person
+        Pair(Routes.HOME, Icons.Default.Home),
+        Pair(Routes.SEARCH, Icons.Default.Search),
+        Pair(Routes.AUTH, Icons.Default.Person)
     )
 
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = backgroundColor) {
-                items.forEachIndexed { index, (route, icon) ->
+                items.forEach { (route, icon) ->
+                    val selectedRoute = if (route == Routes.AUTH && isAuthenticated) Routes.PROFILE else route
+
                     NavigationBarItem(
-                        selected = currentRoute == route,
+                        selected = currentRoute == selectedRoute || (currentRoute == Routes.PROFILE && route == Routes.AUTH),
                         onClick = {
-                            navController.navigate(route) {
-                                popUpTo(Routes.HOME) { inclusive = false }
+                            val targetRoute = if (route == Routes.AUTH) {
+                                if (isAuthenticated) Routes.PROFILE else Routes.AUTH
+                            } else {
+                                route
+                            }
+
+                            navController.navigate(targetRoute) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                    inclusive = false
+                                }
                                 launchSingleTop = true
+                                restoreState = true
                             }
                         },
                         icon = { Icon(icon, contentDescription = route) },
-                        label = { Text(route.replaceFirstChar { it.uppercaseChar() }) }
+                        label = {
+                            Text(
+                                when (route) {
+                                    Routes.AUTH -> "Profile"
+                                    Routes.HOME -> "Home"
+                                    Routes.SEARCH -> "Search"
+                                    else -> route.replaceFirstChar { it.uppercaseChar() }
+                                }
+                            )
+                        }
                     )
                 }
             }

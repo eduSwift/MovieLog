@@ -1,22 +1,13 @@
 package de.syntax_institut.androidabschlussprojekt.ui.screens
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,23 +15,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +37,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
@@ -72,21 +49,34 @@ fun ProfileScreen(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val currentUserId by authViewModel.currentUserId.collectAsState()
     val userState by profileViewModel.userState.collectAsState()
-    val favorites by movieViewModel.favorites.collectAsState()
-    val watched by movieViewModel.watched.collectAsState()
-    val wantToWatch by movieViewModel.wantToWatch.collectAsState()
+
+    val favorites by movieViewModel.favorites.collectAsState(initial = emptyList())
+    val watched by movieViewModel.watched.collectAsState(initial = emptyList())
+    val wantToWatch by movieViewModel.wantToWatch.collectAsState(initial = emptyList())
+
     val didDeleteAccount by authViewModel.didDeleteAccount.collectAsState()
+
+    val ninaCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1752844361/nina_drdfkv.jpg"
+    val avatarCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1752912339/avatar_z4obq5.jpg"
+
+    var nickname by remember { mutableStateOf("") }
+    var isEditingNickname by remember { mutableStateOf(false) }
+    var movieToDelete by remember { mutableStateOf<MovieEntity?>(null) }
+    var showProfileSetupDialog by remember { mutableStateOf(false) }
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            currentUserId?.let { uid -> profileViewModel.uploadProfileImage(uid, it) }
+            val uriString = it.toString()
+            Log.d("PROFILE_URI", "Picked URI: $uriString")
+
+            currentUserId?.let { uid ->
+                profileViewModel.setProfileImageManually(uid, uriString)
+                profileViewModel.loadUserData(uid)
+            }
         }
     }
 
-    var showProfileSetupDialog by remember { mutableStateOf(false) }
-    var nickname by remember { mutableStateOf("") }
-
-    // Navigate to Auth screen after deletion
     LaunchedEffect(didDeleteAccount) {
         if (didDeleteAccount) {
             navController.navigate(Routes.AUTH) {
@@ -97,128 +87,194 @@ fun ProfileScreen(
         }
     }
 
-    // Load data and check profile completeness immediately
     LaunchedEffect(currentUserId) {
-        currentUserId?.let {
-            profileViewModel.loadUserData(it)
-            movieViewModel.refreshUserMovies(it)
+        currentUserId?.let { userId ->
+            profileViewModel.loadUserData(userId)
+            movieViewModel.refreshUserMovies(userId)
+        } ?: run {
+            movieViewModel.clearUserMovies()
         }
     }
 
-    LaunchedEffect(userState) {
-        if (userState is UiState.Success) {
+    LaunchedEffect(userState, isAuthenticated) {
+        if (userState is UiState.Success && isAuthenticated) {
             val user = (userState as UiState.Success).data
             nickname = user.nickname
-            // Only show dialog if profile is not complete AND user is authenticated
-            // This prevents the dialog from briefly showing on initial load if user is not yet logged in
-            if (!user.isProfileComplete && isAuthenticated) {
+            if (!user.isProfileComplete) {
                 showProfileSetupDialog = true
+            } else {
+                showProfileSetupDialog = false
             }
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = modifier
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+    if (!isAuthenticated) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = {
-                    navController.navigate(Routes.SETTINGS)
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Redirecting to login...")
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                when (userState) {
-                    is UiState.Success -> {
-                        val user = (userState as UiState.Success).data
-
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            AsyncImage(
-                                model = user.profileImageUrl.takeIf { !it.isNullOrBlank() },
-                                contentDescription = "Profile Image",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(CircleShape)
-                                    .clickable { imagePickerLauncher.launch("image/*") },
-                                placeholder = painterResource(id = R.drawable.ic_default_profile_placeholder),
-                                error = painterResource(id = R.drawable.ic_default_profile_placeholder)
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = user.nickname.ifBlank { "Your nickname" },
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    is UiState.Error, UiState.Loading -> {
-                        // Show fallback content while loading or on error
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            AsyncImage(
-                                model = null,
-                                contentDescription = "Default Profile Image",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(CircleShape),
-                                placeholder = painterResource(id = R.drawable.ic_default_profile_placeholder),
-                                error = painterResource(id = R.drawable.ic_default_profile_placeholder)
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = "Welcome!",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            if (userState is UiState.Error && isAuthenticated) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Error loading your profile.",
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontSize = 14.sp
-                                )
-                            }
-
-                            if (userState is UiState.Loading) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                CircularProgressIndicator()
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            MovieListSection("Favorites", favorites, currentUserId, movieViewModel)
-            MovieListSection("Watched", watched, currentUserId, movieViewModel)
-            MovieListSection("Want to Watch", wantToWatch, currentUserId, movieViewModel)
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
+        LaunchedEffect(Unit) {
+            navController.navigate(Routes.AUTH) {
+                popUpTo(Routes.HOME) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(onClick = {
+                        navController.navigate(Routes.SETTINGS)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (userState) {
+                        is UiState.Success -> {
+                            val user = (userState as UiState.Success).data
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                val profileImageModel = user.profileImageUrl.takeIf { !it.isNullOrBlank() }
+
+                                AsyncImage(
+                                    model = profileImageModel,
+                                    contentDescription = "Profile Image",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(CircleShape)
+                                        .clickable { imagePickerLauncher.launch("image/*") },
+                                    placeholder = painterResource(id = R.drawable.ic_default_profile_placeholder),
+                                    error = painterResource(id = R.drawable.ic_default_profile_placeholder)
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                if (isEditingNickname) {
+                                    OutlinedTextField(
+                                        value = nickname,
+                                        onValueChange = { nickname = it },
+                                        modifier = Modifier.fillMaxWidth(0.8f),
+                                        singleLine = true,
+                                        label = { Text("Edit Nickname") }
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row(horizontalArrangement = Arrangement.Center) {
+                                        TextButton(onClick = {
+                                            isEditingNickname = false
+                                            currentUserId?.let { profileViewModel.updateNickname(it, nickname) }
+                                        }) { Text("Save") }
+                                        TextButton(onClick = { isEditingNickname = false }) { Text("Cancel") }
+                                    }
+                                } else {
+                                    Text(
+                                        text = user.nickname.ifBlank { "Your nickname" },
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.clickable { isEditingNickname = true }
+                                    )
+                                }
+                            }
+                        }
+
+                        is UiState.Error, UiState.Loading -> {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                AsyncImage(
+                                    model = null,
+                                    contentDescription = "Select Profile Image",
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary)
+                                        .clickable { imagePickerLauncher.launch("image/*") },
+                                    placeholder = painterResource(id = R.drawable.ic_default_profile_placeholder),
+                                    error = painterResource(id = R.drawable.ic_default_profile_placeholder)
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    text = if (userState is UiState.Loading) "Loading Profile..." else "Welcome!",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                if (userState is UiState.Error && isAuthenticated) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Error loading your profile. Please try again.",
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                if (userState is UiState.Loading) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    CircularProgressIndicator()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MovieListSection("Favorites", favorites, currentUserId, movieViewModel, navController) { movieToDelete = it }
+                MovieListSection("Watched", watched, currentUserId, movieViewModel, navController) { movieToDelete = it }
+                MovieListSection("Want to Watch", wantToWatch, currentUserId, movieViewModel, navController) { movieToDelete = it }
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+
+            movieToDelete?.let { movie ->
+                AlertDialog(
+                    onDismissRequest = { movieToDelete = null },
+                    title = { Text("Delete Movie") },
+                    text = { Text("Are you sure you want to delete '${movie.title}'?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            currentUserId?.let {
+                                movieViewModel.removeMovie(it, movie, type = movie.listType)
+                            }
+                            movieToDelete = null
+                        }) {
+                            Text("Delete", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { movieToDelete = null }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+        }
+
 
         if (showProfileSetupDialog) {
             Box(
@@ -243,8 +299,9 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         AsyncImage(
-                            model = null, // Current profile image can be shown here if already uploaded
+                            model = null,
                             contentDescription = "Select Profile Image",
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(100.dp)
                                 .clip(CircleShape)
@@ -267,9 +324,9 @@ fun ProfileScreen(
 
                         Button(
                             onClick = {
-                                currentUserId?.let {
-                                    profileViewModel.updateNickname(it, nickname)
-                                    profileViewModel.markProfileComplete(it)
+                                currentUserId?.let { uid ->
+                                    profileViewModel.updateNickname(uid, nickname)
+                                    profileViewModel.markProfileComplete(uid)
                                 }
                                 showProfileSetupDialog = false
                             },
@@ -280,7 +337,12 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        TextButton(onClick = { showProfileSetupDialog = false }) {
+                        TextButton(onClick = {
+                            currentUserId?.let { uid ->
+                                profileViewModel.markProfileComplete(uid)
+                            }
+                            showProfileSetupDialog = false
+                        }) {
                             Text("Skip")
                         }
                     }
@@ -295,31 +357,45 @@ fun MovieListSection(
     title: String,
     movies: List<MovieEntity>,
     currentUserId: String?,
-    movieViewModel: MovieViewModel
+    movieViewModel: MovieViewModel,
+    navController: NavController,
+    onConfirmDelete: (MovieEntity) -> Unit
 ) {
-    if (movies.isEmpty()) return
-
     Column {
         Text(
             text = "$title (${movies.size})",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(vertical = 8.dp)
         )
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .fillMaxWidth()
-        ) {
-            movies.forEach { movie ->
-                MovieCard(
-                    movie = movie,
-                    onClick = {},
-                    onDelete = {
-                        if (currentUserId != null) {
-                            movieViewModel.removeMovie(currentUserId, movie, type = title.lowercase())
-                        }
-                    }
-                )
+        if (movies.isEmpty()) {
+            Text(
+                text = "No movies in this list yet.",
+                modifier = Modifier.padding(16.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .fillMaxWidth()
+            ) {
+                movies.forEach { movie ->
+                    MovieCard(
+                        movie = movie,
+                        onClick = {
+                            navController.navigate(
+                                Routes.movieDetailRoute(
+                                    movieId = movie.tmdbMovieId,
+                                    posterPath = movie.posterPath ?: "",
+                                    title = movie.title,
+                                    overview = movie.overview,
+                                    releaseDate = movie.releaseDate
+                                )
+                            )
+                        },
+                        onDelete = { onConfirmDelete(movie.copy(listType = title.lowercase())) }
+                    )
+                }
             }
         }
     }

@@ -54,7 +54,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun MovieDetailScreen(
     navController: NavController,
-    movieId: Int, // This is the TMDB movie ID coming from navigation
+    movieId: Int,
     posterPath: String?,
     title: String?,
     overview: String?,
@@ -87,15 +87,15 @@ fun MovieDetailScreen(
         visible = true
     }
 
-    // *** FIX APPLIED HERE: Correctly creating MovieEntity ***
     val movieEntity = MovieEntity(
-        id = 0, // Set to 0 to let Room autogenerate the primary key for new inserts
-        tmdbMovieId = movieId, // Pass the 'movieId' received from navigation to 'tmdbMovieId'
+        id = 0,
+        tmdbMovieId = movieId,
         userId = userId ?: "",
         title = title ?: "",
         posterPath = posterPath ?: "",
         overview = overview ?: "",
-        releaseDate = releaseDate ?: ""
+        releaseDate = releaseDate ?: "",
+        listType = ""
     )
 
     Scaffold(
@@ -196,7 +196,6 @@ fun MovieDetailScreen(
                     Text("Want to Watch")
                 }
 
-                // Watched Button
                 OutlinedButton(onClick = {
                     if (isAuthenticated && userId != null) {
                         movieViewModel.toggleFlag(userId!!, movieEntity, "watched")
@@ -208,7 +207,6 @@ fun MovieDetailScreen(
                     Text("Watched")
                 }
 
-                // Favorite Button
                 IconButton(onClick = {
                     if (isAuthenticated && userId != null) {
                         movieViewModel.toggleFlag(userId!!, movieEntity, "favorite")
@@ -218,9 +216,9 @@ fun MovieDetailScreen(
                     }
                 }) {
                     Icon(
-                        imageVector = Icons.Default.FavoriteBorder, // Consider using filled/bordered based on state
+                        imageVector = Icons.Default.FavoriteBorder,
                         contentDescription = "Add to Favorites",
-                        tint = Color.Red // You might want to change color based on `isFavorite` state from MovieEntity
+                        tint = Color.Red
                     )
                 }
             }

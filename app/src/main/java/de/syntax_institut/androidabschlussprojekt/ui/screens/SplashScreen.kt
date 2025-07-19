@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,8 +40,8 @@ import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
-fun SplashScreen(navController: NavController) {
-    val context = LocalContext.current
+fun SplashScreen(
+    navController: NavController) {
     val composition by rememberLottieComposition(LottieCompositionSpec.Asset("clapperboard.json"))
     val progress by animateLottieCompositionAsState(
         composition = composition,
@@ -52,7 +51,6 @@ fun SplashScreen(navController: NavController) {
     )
 
     var showTitle by remember { mutableStateOf(false) }
-
 
     val infiniteTransition = rememberInfiniteTransition()
     val glowAlpha by infiniteTransition.animateFloat(
@@ -64,7 +62,6 @@ fun SplashScreen(navController: NavController) {
         )
     )
 
-
     LaunchedEffect(true) {
         delay(2800)
         showTitle = true
@@ -74,13 +71,13 @@ fun SplashScreen(navController: NavController) {
         }
     }
 
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFB3D7EA)),
         contentAlignment = Alignment.Center
     ) {
-
         SparkleBackground()
 
         Box(

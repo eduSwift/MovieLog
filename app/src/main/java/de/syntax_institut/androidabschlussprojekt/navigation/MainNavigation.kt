@@ -12,8 +12,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import de.syntax_institut.androidabschlusprojekt.ui.components.MainScaffold
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
-import de.syntax_institut.androidabschlussprojekt.ui.components.MainScaffold
 import de.syntax_institut.androidabschlussprojekt.ui.screens.AuthScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.HomeScreen
 import de.syntax_institut.androidabschlussprojekt.ui.screens.MovieDetailScreen
@@ -32,14 +32,12 @@ fun MainNavigation(
     onNavigateToMovieDetail: (Movie) -> Unit,
     isDarkModeEnabled: Boolean,
     onToggleDarkMode: (Boolean) -> Unit,
-    settingsViewModel: SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    authViewModel: AuthViewModel
 ) {
-    val authViewModel: AuthViewModel = koinViewModel()
     val profileViewModel: ProfileViewModel = koinViewModel()
-
     val didLogout by authViewModel.didLogout.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-    val authReady by authViewModel.authReady.collectAsState()
 
     LaunchedEffect(didLogout) {
         if (didLogout) {
@@ -60,25 +58,45 @@ fun MainNavigation(
         }
 
         composable(Routes.HOME) {
-            MainScaffold(navController = navController) { innerPadding ->
+            MainScaffold(
+                navController = navController,
+                isAuthenticated = isAuthenticated
+            ) { innerPadding ->
                 HomeScreen(
                     modifier = Modifier.padding(innerPadding),
                     onMovieClick = onNavigateToMovieDetail,
                     isAuthenticated = isAuthenticated,
                     onProfileClick = {
                         if (isAuthenticated) {
-                            navController.navigate(Routes.PROFILE)
+                            navController.navigate(Routes.PROFILE) {
+                                popUpTo(Routes.HOME) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         } else {
-                            navController.navigate(Routes.AUTH)
+                            navController.navigate(Routes.AUTH) {
+                                popUpTo(Routes.HOME) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     },
-                    onSearchClick = { navController.navigate(Routes.SEARCH) }
+                    onSearchClick = {
+                        navController.navigate(Routes.SEARCH) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }
 
         composable(Routes.SEARCH) {
-            MainScaffold(navController = navController) { innerPadding ->
+            MainScaffold(
+                navController = navController,
+                isAuthenticated = isAuthenticated
+            ) { innerPadding ->
                 SearchScreen(
                     modifier = Modifier.padding(innerPadding),
                     onMovieClick = onNavigateToMovieDetail
@@ -118,13 +136,16 @@ fun MainNavigation(
         }
 
         composable(Routes.AUTH) {
-            MainScaffold(navController = navController) { innerPadding ->
+            MainScaffold(
+                navController = navController,
+                isAuthenticated = isAuthenticated
+            ) { innerPadding ->
                 AuthScreen(
                     modifier = Modifier.padding(innerPadding),
                     authViewModel = authViewModel,
                     onLoginSuccess = {
                         navController.navigate(Routes.PROFILE) {
-                            popUpTo(Routes.AUTH) { inclusive = true }
+                            popUpTo(Routes.HOME) { inclusive = false }
                             launchSingleTop = true
                         }
                     },
@@ -138,22 +159,17 @@ fun MainNavigation(
             }
         }
 
+
         composable(Routes.PROFILE) {
-            MainScaffold(navController = navController) { innerPadding ->
-                if (isAuthenticated) {
-                    ProfileScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        navController = navController,
-                        authViewModel = authViewModel
-                    )
-                } else {
-                    LaunchedEffect(Unit) {
-                        navController.navigate(Routes.AUTH) {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                }
+            MainScaffold(
+                navController = navController,
+                isAuthenticated = isAuthenticated
+            ) { innerPadding ->
+                ProfileScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
             }
         }
 

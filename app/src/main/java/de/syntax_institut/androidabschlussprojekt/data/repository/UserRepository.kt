@@ -16,8 +16,8 @@ class UserRepository(private val userDao: UserDao) {
         userDao.updateNickname(uid, nickname)
     }
 
-    suspend fun uploadProfileImage(uid: String, imageUrl: String) {
-        userDao.uploadProfileImage(uid, imageUrl)
+    suspend fun uploadProfileImage(uid: String, url: String) {
+            userDao.uploadProfileImage(uid, url)
     }
 
     suspend fun deleteUser(uid: String) {

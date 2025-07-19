@@ -9,6 +9,6 @@ data class UserEntity(
     val uid: String,
     val email: String,
     val nickname: String,
-    val profileImageUrl: String?,
+    val profileImageUrl: String = "",
     val isProfileComplete: Boolean = false
 )

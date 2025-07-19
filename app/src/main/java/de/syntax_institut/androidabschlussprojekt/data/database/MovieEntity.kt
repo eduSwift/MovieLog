@@ -15,5 +15,6 @@ data class MovieEntity(
     val releaseDate: String,
     val isWantToWatch: Boolean = false,
     val isWatched: Boolean = false,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val listType: String = ""
 )

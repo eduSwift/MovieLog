@@ -22,8 +22,8 @@ interface UserDao {
     @Query("UPDATE users SET nickname = :nickname WHERE uid = :uid")
     suspend fun updateNickname(uid: String, nickname: String)
 
-    @Query("UPDATE users SET profileImageUrl = :imageUrl WHERE uid = :uid")
-    suspend fun uploadProfileImage(uid: String, imageUrl: String)
+    @Query("UPDATE users SET profileImageUrl = :url WHERE uid = :uid")
+    suspend fun uploadProfileImage(uid: String, url: String)
 
     @Query("UPDATE users SET isProfileComplete = 1 WHERE uid = :uid")
     suspend fun markProfileComplete(uid: String)
