@@ -1,13 +1,13 @@
 package de.syntax_institut.androidabschlussprojekt.data.repository
 
-
-import de.syntax_institut.androidabschlussprojekt.BuildConfig
 import de.syntax_institut.androidabschlussprojekt.data.api.APIService
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieEntity
 import de.syntax_institut.androidabschlussprojekt.data.model.Movie
 import de.syntax_institut.androidabschlussprojekt.data.model.MovieCategory
+import de.syntax_institut.androidabschlussprojekt.BuildConfig
 import kotlinx.coroutines.flow.Flow
+
 
 class MovieRepository(
     private val api: APIService,
@@ -35,14 +35,10 @@ class MovieRepository(
         movieDao.deleteMovie(movie)
     }
 
-
     suspend fun getMovieByIdAndUserId(tmdbMovieId: Int, userId: String): MovieEntity? {
         return movieDao.getMovieByIdAndUserId(tmdbMovieId, userId)
     }
 
-    fun getUserMovies(userId: String): Flow<List<MovieEntity>> {
-        return movieDao.getMoviesForUser(userId)
-    }
 
     fun getFavoritesForUser(userId: String): Flow<List<MovieEntity>> {
         return movieDao.getFavoriteMovies(userId)

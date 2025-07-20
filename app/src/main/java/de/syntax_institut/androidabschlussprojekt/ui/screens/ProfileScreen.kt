@@ -4,6 +4,17 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -58,6 +69,10 @@ fun ProfileScreen(
 
     val ninaCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1752844361/nina_drdfkv.jpg"
     val avatarCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1752912339/avatar_z4obq5.jpg"
+    val ericCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1753006574/eric_dz5nu6.jpg"
+    val anaCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1753006677/ana_osilai.jpg"
+    val lauCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1753006728/lau_ez7afy.jpg"
+    val paulCloudinaryUrl = "https://res.cloudinary.com/dldlsfv1n/image/upload/v1753006801/paul_k2xjnj.jpg"
 
     var nickname by remember { mutableStateOf("") }
     var isEditingNickname by remember { mutableStateOf(false) }
@@ -131,6 +146,7 @@ fun ProfileScreen(
                 modifier = modifier
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
+                    .animateContentSize()
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -174,31 +190,43 @@ fun ProfileScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                if (isEditingNickname) {
-                                    OutlinedTextField(
-                                        value = nickname,
-                                        onValueChange = { nickname = it },
-                                        modifier = Modifier.fillMaxWidth(0.8f),
-                                        singleLine = true,
-                                        label = { Text("Edit Nickname") }
-                                    )
+                                AnimatedContent(
+                                    targetState = isEditingNickname,
+                                    transitionSpec = {
+                                        fadeIn(animationSpec = tween(150)) +
+                                                slideInVertically(animationSpec = tween(150), initialOffsetY = { it / 2 }) togetherWith
+                                                fadeOut(animationSpec = tween(150)) +
+                                                slideOutVertically(animationSpec = tween(150), targetOffsetY = { it / 2 })
+                                    }, label = "NicknameEditAnimation"
+                                ) { targetIsEditing ->
+                                    if (targetIsEditing) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            OutlinedTextField(
+                                                value = nickname,
+                                                onValueChange = { nickname = it },
+                                                modifier = Modifier.fillMaxWidth(0.8f),
+                                                singleLine = true,
+                                                label = { Text("Edit Nickname") }
+                                            )
 
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                            Spacer(modifier = Modifier.height(4.dp))
 
-                                    Row(horizontalArrangement = Arrangement.Center) {
-                                        TextButton(onClick = {
-                                            isEditingNickname = false
-                                            currentUserId?.let { profileViewModel.updateNickname(it, nickname) }
-                                        }) { Text("Save") }
-                                        TextButton(onClick = { isEditingNickname = false }) { Text("Cancel") }
+                                            Row(horizontalArrangement = Arrangement.Center) {
+                                                TextButton(onClick = {
+                                                    isEditingNickname = false
+                                                    currentUserId?.let { profileViewModel.updateNickname(it, nickname) }
+                                                }) { Text("Save") }
+                                                TextButton(onClick = { isEditingNickname = false }) { Text("Cancel") }
+                                            }
+                                        }
+                                    } else {
+                                        Text(
+                                            text = user.nickname.ifBlank { "Your nickname" },
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.clickable { isEditingNickname = true }
+                                        )
                                     }
-                                } else {
-                                    Text(
-                                        text = user.nickname.ifBlank { "Your nickname" },
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.clickable { isEditingNickname = true }
-                                    )
                                 }
                             }
                         }
@@ -251,32 +279,43 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
-            movieToDelete?.let { movie ->
-                AlertDialog(
-                    onDismissRequest = { movieToDelete = null },
-                    title = { Text("Delete Movie") },
-                    text = { Text("Are you sure you want to delete '${movie.title}'?") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            currentUserId?.let {
-                                movieViewModel.removeMovie(it, movie, type = movie.listType)
+
+            AnimatedVisibility(
+                visible = movieToDelete != null,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                movieToDelete?.let { movie ->
+                    AlertDialog(
+                        onDismissRequest = { movieToDelete = null },
+                        title = { Text("Delete Movie") },
+                        text = { Text("Are you sure you want to delete '${movie.title}'?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                currentUserId?.let {
+                                    movieViewModel.removeMovie(it, movie, type = movie.listType)
+                                }
+                                movieToDelete = null
+                            }) {
+                                Text("Delete", color = MaterialTheme.colorScheme.error)
                             }
-                            movieToDelete = null
-                        }) {
-                            Text("Delete", color = MaterialTheme.colorScheme.error)
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { movieToDelete = null }) {
+                                Text("Cancel")
+                            }
                         }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { movieToDelete = null }) {
-                            Text("Cancel")
-                        }
-                    }
-                )
+                    )
+                }
             }
         }
 
 
-        if (showProfileSetupDialog) {
+        AnimatedVisibility(
+            visible = showProfileSetupDialog,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
