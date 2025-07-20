@@ -1,25 +1,23 @@
 # 🎬 MovieLog
 
-**Track, rate, and remember the movies you love.**
+**Track, review, and remember the movies you love.**
 
-<img src="https://github.com/SI-Classroom-Batch-022/androidabschlussprojekt-eduSwift/blob/main/MovieLog.png" width="500" align="left">
+<img src="https://github.com/SI-Classroom-Batch-022/androidabschlussprojekt-eduSwift/blob/main/MovieLog.png" width="300" align="left">
 
 <br clear="all">
 
 ## 🖥️ Overview
-<p>MovieLog is a personal movie diary for film enthusiasts, who want to keep track of the movies they’ve watched and remember how they felt about them. Search for movies, save your favorites, rate them, and write short personal reviews — all in one simple and stylish app.</p>
+<p>MovieLog is a personal movie diary for film enthusiasts, who want to keep track of the movies they’ve watched and remember how they felt about them. 
 
-## 📋 Contents
-- [Overview](#-overview)
-- [Screenshots](#-screenshots)
-- [Installation](#-installation)
-- [Features](#-features)
-- [Technical Stack](#-technical-stack)
-- [Libraries](#-libraries)
-- [Contact/Authors](#-contactauthors)
+🔍 Search for movies  
+⭐ Save favorites  
+📝 Write short reviews  
+🎨 Enjoy a clean, user-friendly interface
 
 ## 📸 Screenshots 
-*Under Construction*
+<img src="https://github.com/SI-Classroom-Batch-022/androidabschlussprojekt-eduSwift/blob/main/Screenshot%202025-07-20%20at%2015.42.46.png" width="500" align="left">
+
+<br clear="all">
 
 ## ✨ Features
 
@@ -27,7 +25,9 @@
 <li>🔍 Search movies using a public movie database</li>
 <li>💬 Write short personal reviews</li>
 <li>💾 Save favorite movies</li>
-<li>⭐️ Rate saved movies (1–5 stars)</li>
+<li>📄 View watched, watchlist, and favorites</li>
+<li>🌙 Dark Mode</li>
+   
 </ol>
 
 ## 📲 Installation
@@ -43,27 +43,34 @@
 
 ## 🚀 Technical Stack
 
-### 📁 Project Structure
-MovieLog uses the MVVM (Model-View-ViewModel) architecture and is structured into clear packages for separation of concerns
+🔹 Architecture
+	•	MVVM (Model-View-ViewModel) pattern
+	•	Repository & ViewModel layers for clean separation of concerns
 
 ### 🏗️ Core Components
-- **[Jetpack Compose](https://developer.android.com/compose)** - UI Framework
+- **[Jetpack Compose](https://developer.android.com/compose)** - UI toolkit
 - **[Room](https://developer.android.com/training/data-storage/room)** - Local database
-- **[Retrofit](https://developer.android.com/training/data-storage/room)** - API networking
+- **[Retrofit](https://developer.android.com/training/data-storage/room)** - Network client
 - **[Moshi](https://developer.android.com/training/data-storage/room)** - JSON parsing
+- **[Firebase Authentication](https://firebase.google.com)** - User login & signup
+- **[Koin](https://insert-koin.io)** - Dependency Injection
  
-## 📚 Libraries
-[TMDb (The Movie Database)](https://developer.themoviedb.org/docs/getting-started)** - API for movie search and details
+### 📚 APIs & Libraries
+[TMDb (The Movie Database)](https://developer.themoviedb.org/docs/getting-started) - API for movie search and details<br>
+[Coil](https://coil-kt.github.io/coil/) - Image loading<br>
+[Lottie by Airbnb](https://lottiefiles.com) - Splash animations<br>
 
-## 🔭 Outlook
-Here’s what’s planned for future development of MovieLog:
+### 🔭 Roadmap
 
-<ol>
-<li> Add a Watchlist (to log movies you want to see)</li>
-<li> Add Dark Mode support</li>
-<li> Filter and sort favorites (by year, rating, title)</li>
+ ✅ User authentication (Firebase)<br>
+ ✅ Local storage with Room<br>
+ ✅ Movie lists: Favorites, Watched, Watchlist<br>
+ ✅ Add comment system per movie<br>
+ ✅ Settings screen with Dark Mode<br>
+ ⏳ Improve filtering and sorting<br>
+ ⏳ Multi-language support<br>
 
-## 👨🏻‍💻 Contact/Authors
-[Eduardo Rodrigues](https://www.linkedin.com/in/eduardo-rodriguescruz/)
+## 👨🏻‍💻 Author
+**[Eduardo Rodrigues](https://www.linkedin.com/in/eduardo-rodriguescruz/)**
 
 
