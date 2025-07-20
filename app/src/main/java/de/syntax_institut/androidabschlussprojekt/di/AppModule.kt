@@ -9,6 +9,8 @@ import de.syntax_institut.androidabschlussprojekt.data.database.CommentDao
 import de.syntax_institut.androidabschlussprojekt.data.database.MovieDao
 import de.syntax_institut.androidabschlussprojekt.data.database.UserDao
 import de.syntax_institut.androidabschlussprojekt.data.datastore.ThemePreferences
+import de.syntax_institut.androidabschlussprojekt.data.network.ConnectivityObserver
+import de.syntax_institut.androidabschlussprojekt.data.network.NetworkConnectivityObserver
 import de.syntax_institut.androidabschlussprojekt.data.repository.CommentRepository
 import de.syntax_institut.androidabschlussprojekt.data.repository.MovieRepository
 import de.syntax_institut.androidabschlussprojekt.data.repository.UserRepository
@@ -16,6 +18,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.AuthViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.CommentViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.HomeScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.MovieViewModel
+import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.NetworkStatusViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SearchScreenViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
@@ -58,6 +61,7 @@ val appModule = module {
     single<UserDao> { get<AppDatabase>().userDao() }
     single<MovieDao> { get<AppDatabase>().movieDao() }
     single<CommentDao> { get<AppDatabase>().commentDao()}
+    single<ConnectivityObserver> { NetworkConnectivityObserver(androidContext()) }
 
     single { UserRepository(get()) }
     single { MovieRepository(api = get(), movieDao = get()) }
@@ -71,5 +75,6 @@ val appModule = module {
     viewModel { ProfileViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { CommentViewModel(get(), get()) }
+    viewModel { NetworkStatusViewModel(get()) }
 
 }

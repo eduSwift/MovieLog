@@ -2,6 +2,8 @@ package de.syntax_institut.androidabschlussprojekt.navigation
 
 import android.util.Log
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +29,7 @@ import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.ProfileViewModel
 import de.syntax_institut.androidabschlussprojekt.ui.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainNavigation(
     navController: NavHostController,
@@ -34,7 +37,8 @@ fun MainNavigation(
     isDarkModeEnabled: Boolean,
     onToggleDarkMode: (Boolean) -> Unit,
     settingsViewModel: SettingsViewModel,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    snackbarHostState: SnackbarHostState
 ) {
     val profileViewModel: ProfileViewModel = koinViewModel()
     val didLogout by authViewModel.didLogout.collectAsState()
@@ -61,7 +65,8 @@ fun MainNavigation(
         composable(Routes.HOME) {
             MainScaffold(
                 navController = navController,
-                isAuthenticated = isAuthenticated
+                isAuthenticated = isAuthenticated,
+                snackbarHostState = snackbarHostState
             ) { innerPadding ->
                 HomeScreen(
                     modifier = Modifier.padding(innerPadding),
@@ -96,7 +101,8 @@ fun MainNavigation(
         composable(Routes.SEARCH) {
             MainScaffold(
                 navController = navController,
-                isAuthenticated = isAuthenticated
+                isAuthenticated = isAuthenticated,
+                snackbarHostState = snackbarHostState
             ) { innerPadding ->
                 SearchScreen(
                     modifier = Modifier.padding(innerPadding),
@@ -139,7 +145,8 @@ fun MainNavigation(
         composable(Routes.AUTH) {
             MainScaffold(
                 navController = navController,
-                isAuthenticated = isAuthenticated
+                isAuthenticated = isAuthenticated,
+                snackbarHostState = snackbarHostState
             ) { innerPadding ->
                 AuthScreen(
                     modifier = Modifier.padding(innerPadding),
@@ -164,7 +171,8 @@ fun MainNavigation(
         composable(Routes.PROFILE) {
             MainScaffold(
                 navController = navController,
-                isAuthenticated = isAuthenticated
+                isAuthenticated = isAuthenticated,
+                snackbarHostState = snackbarHostState
             ) { innerPadding ->
                 ProfileScreen(
                     modifier = Modifier.padding(innerPadding),
