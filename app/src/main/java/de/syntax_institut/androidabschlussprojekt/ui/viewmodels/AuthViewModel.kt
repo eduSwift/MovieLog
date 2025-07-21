@@ -50,11 +50,13 @@ class AuthViewModel(
         }
     }
 
-
     fun signUp(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
-                val uid = result.user?.uid ?: return@addOnSuccessListener
+                val uid = result.user?.uid ?: run {
+                    onError("User UID not found after sign up.")
+                    return@addOnSuccessListener
+                }
 
                 viewModelScope.launch {
                     try {
@@ -66,11 +68,10 @@ class AuthViewModel(
                             isProfileComplete = false
                         )
                         userRepository.insertUser(newUser)
-                        firebaseAuth.signOut()
                         _justSignedUp.value = true
                         onSuccess()
                     } catch (e: Exception) {
-                        onError("Failed to insert user in Room: ${e.localizedMessage}")
+                        onError("Failed to insert user data: ${e.localizedMessage}")
                         result.user?.delete()
                     }
                 }

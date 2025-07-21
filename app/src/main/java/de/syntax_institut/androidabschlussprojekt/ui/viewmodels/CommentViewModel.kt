@@ -22,6 +22,7 @@ class CommentViewModel(
     private val _commentCount = MutableStateFlow(0)
     val commentCount: StateFlow<Int> = _commentCount
 
+
     suspend fun getUserById(uid: String): UserEntity? {
         return userRepository.getUser(uid)
     }
