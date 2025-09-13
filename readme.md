@@ -33,7 +33,7 @@
 ## 📲 Installation
 1. Clone repo:
    ```bash
-   git clone https://github.com/yourusername/movielog.git
+   git clone https://github.com/eduSwift/MovieLog
 
 2. Navigate to the project folder:
    ```bash
